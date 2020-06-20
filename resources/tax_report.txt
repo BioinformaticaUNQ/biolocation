@@ -1,0 +1,11 @@
+
+code	|	name	|	preferred name	|	taxid
+1	|	Homo sapiens	|	 	|	9606
+1	|	Gallus gallus	|	 	|	9031
+1	|	Pan troglodytes	|	 	|	9598
+1	|	Equus caballus	|	 	|	9796
+1	|	Canis lupus familiaris	|	 	|	9615
+1	|	Gorilla gorilla	|	 	|	9593
+1	|	Oncorhynchus tshawytscha	|	 	|	74940
+1	|	Xenopus laevis	|	 	|	8355
+1	|	Drosophila melanogaster	|	 	|	7227

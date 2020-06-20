@@ -1,0 +1,9 @@
+Homo sapiens
+Gallus gallus
+Pan troglodytes
+Equus caballus
+Canis lupus familiaris
+Gorilla gorilla
+Oncorhynchus tshawytscha
+Xenopus laevis
+Drosophila melanogaster
