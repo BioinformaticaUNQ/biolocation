@@ -1,5 +1,10 @@
 .idea/
 auxiliar/
+src/egfr-family.phy
+src/egfr-family.phy_phyml_boot_stats.txt
+src/egfr-family.phy_phyml_boot_trees.txt
+src/egfr-family.phy_phyml_stats.txt
+src/egfr-family.phy_phyml_tree.txt
 
 # Created by .ignore support plugin (hsz.mobi)
 ### Python template

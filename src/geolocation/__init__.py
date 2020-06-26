@@ -93,7 +93,6 @@ def dataset(fileName):
             # use Entrez.efetch to read data in .xml format
             handle = Entrez.efetch(db="nucleotide", id=list_of_ids, retmode="xml")
             record = Entrez.read(handle, validate=False)
-            print(record)
             # reset lists for values to be stored
             accessions = []
             definitions = []
@@ -225,7 +224,8 @@ def dataset(fileName):
                 organelles.append('NA')
             print('lat_lons')
             print(lat_lons[0])
-        draw(countries[0].split(',')[0].split(': ')[1])
+            print(countries)
+        draw(countries[0]) #.split(',')[0].split(': ')[1])
 
         # loop through all records
         '''for i in range(len(record)):
@@ -364,7 +364,6 @@ def draw(city):
     # fig, ax = plt.subplots()
     myMap = Basemap(projection='robin', lon_0=0, lat_0=0) # ax=ax
     place = geo.geocode(city)
-    print(place)
     x, y = myMap(place.longitude, place.latitude)
     myMap.drawcoastlines()
     myMap.drawcountries()
@@ -386,3 +385,4 @@ def draw(city):
         time.sleep(0.5)
         x, y = myMap(p.longitude, p.latitude)
         myMap.plot(x, y, color='g', marker='o', markersize='15')'''
+    plt.show()
