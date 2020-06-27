@@ -1,4 +1,6 @@
 import os
+import sys
+from pathlib import Path
 
 from Bio import SeqIO, Phylo
 from Bio.Align.Applications import MuscleCommandline
@@ -12,18 +14,23 @@ from Bio import AlignIO
 def fasta_to_tree(filename):
     file = open(filename, "r")
     records = [seqrec for seqrec in SeqIO.parse(file, "fasta")]
-    home_dir = os.path.expanduser("~")
-    muscle_exe = os.path.join(home_dir, "PycharmProjects/bioinformatica/resources/muscle3.8.31_i86win32.exe")
+    project_dir = Path(__file__).parent.parent.parent
+    muscle_exe = os.path.join(project_dir, "resources/muscle3.8.31_i86/muscle3.8.31_i86win32.exe")
+    # muscle_exe = os.path.join(project_dir, "resources/muscle3.8.31_i86/muscle3.8.31_i86linux32")
     muscle_cline = MuscleCommandline(muscle_exe, input=filename, clwstrict=True)
     stdout, stderr = muscle_cline()
     # align = AlignIO.read(StringIO(stdout), "clustal")
     # align = AlignIO.read(StringIO(stdout), "fasta")
-    AlignIO.convert(StringIO(stdout), "clustal", "egfr-family.phy", "phylip-relaxed")
-    phyml_exe = os.path.join(home_dir, "PycharmProjects/bioinformatica/resources/PhyML-3.1/PhyML-3.1_win32.exe")
+    AlignIO.convert(StringIO(stdout), "clustal",  "egfr-family.phy", "phylip-relaxed")
+    # alignments = AlignIO.parse(StringIO(stdout), format="clustal", alphabet="phylip-relaxed")
+    phyml_exe = os.path.join(project_dir, "resources/PhyML-3.1/PhyML-3.1_win32.exe")
+    # phyml_exe = os.path.join(project_dir, "resources/PhyML-3.1/PhyML-3.1_linux32")
     phyml_cline = PhymlCommandline(phyml_exe, input='egfr-family.phy', datatype='aa', model='WAG', alpha='e',
                                    bootstrap=1)
     out_log, err_log = phyml_cline()
+    os.remove('egfr-family.phy')
     egfr_tree = Phylo.read("egfr-family.phy_phyml_tree.txt", "newick")
+    os.remove('egfr-family.phy_phyml_tree.txt')
     # Phylo.draw_ascii(egfr_tree)
     egfr_tree.rooted = True
     # Phylo.draw(egfr_tree)
@@ -37,6 +44,9 @@ def fasta_to_tree(filename):
     # mrca.color = "salmon"
     egfr_phy.clade[0].color = "blue"
     Phylo.draw(egfr_phy)
+    os.remove('egfr-family.phy_phyml_boot_stats.txt')
+    os.remove('egfr-family.phy_phyml_boot_trees.txt')
+    os.remove('egfr-family.phy_phyml_stats.txt')
     # Make a lookup table for sequences
     '''lookup = dict((rec.id, str(rec.seq)) for rec in records)
     for clade in egfr_phy.get_terminals():

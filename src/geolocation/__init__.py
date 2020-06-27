@@ -225,7 +225,7 @@ def dataset(fileName):
             print('lat_lons')
             print(lat_lons[0])
             print(countries)
-        draw(countries[0]) #.split(',')[0].split(': ')[1])
+        draw(countries[0])  # .split(',')[0].split(': ')[1])
 
         # loop through all records
         '''for i in range(len(record)):
@@ -355,14 +355,15 @@ def dataset(fileName):
                 print(countries)
                 print('lat_lons')
                 print(lat_lons)'''
-
+    input_handle.close()
+    os.remove(gb_file)
 
 def draw(city):
     place_list = []
     geo = Nominatim(user_agent='BioLocation', timeout=2)
     plt.figure(figsize=(16, 12))
     # fig, ax = plt.subplots()
-    myMap = Basemap(projection='robin', lon_0=0, lat_0=0) # ax=ax
+    myMap = Basemap(projection='robin', lon_0=0, lat_0=0)  # ax=ax
     place = geo.geocode(city)
     x, y = myMap(place.longitude, place.latitude)
     myMap.drawcoastlines()
