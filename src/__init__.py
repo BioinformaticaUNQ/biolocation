@@ -3,6 +3,7 @@ import os
 from src import geolocation, evolutionaryInference
 from src.evolutionaryInference import clustalo
 
+
 ###########################################################################
 # Cambiar arcchivo py por pyw para poder ejecutarlo directamente del archivo
 # raiz=Tk()
@@ -43,11 +44,11 @@ class Root(Tk):
         if self.fileName.endswith('.fasta'):
             self.button.configure(text=os.path.basename(self.fileName))
 
-            # geolocation.dataset(self.fileName)
+            geolocation.dataset(self.fileName)
 
             # out_file = os.path.basename(self.fileName) + '-aligned.fasta'
             # clustalo.runClustalO("martin@gmail.com", self.fileName, outfilename=out_file, fmt='fasta')
-            evolutionaryInference.fasta_to_tree(self.fileName)
+            # evolutionaryInference.fasta_to_tree(self.fileName)
         else:
             self.label = ttk.Label(self.labelFrame, text='')
             self.label.grid(column=1, row=2)
@@ -57,7 +58,6 @@ class Root(Tk):
 if __name__ == '__main__':
     root = Root()
     root.mainloop()
-
 
 ##########################################################################
 # Desde la terminal --> python tpFinal .py SecuenciasCytocromoC.fasta

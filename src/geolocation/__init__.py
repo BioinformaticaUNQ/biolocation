@@ -1,16 +1,17 @@
 import itertools
 import os
-import sys
+from pathlib import Path
 
 import Bio
 from Bio import Entrez
 from Bio import SeqIO
 from Bio.Alphabet import generic_protein
 from geopy.geocoders import Nominatim
-import time
 
-home_dir = os.path.expanduser("~")
-my_module = os.path.join(home_dir, "Anaconda3\Library\share\lib")
+# home_dir = os.path.expanduser("~")
+# my_module = os.path.join(home_dir, "Anaconda3\Library\share")
+project_dir = Path(__file__).parent.parent.parent
+my_module = os.path.join(project_dir, "resources")
 os.environ['PROJ_LIB'] = my_module
 
 from mpl_toolkits.basemap.test import Basemap
@@ -30,7 +31,7 @@ def fasta_to_genbank(filename):
     file = open(filename, "r")
     # records = [seqrec for seqrec in Bio.SeqIO.parse(file, "fasta", alphabet=generic_protein)]
     records = Bio.SeqIO.parse(file, "fasta", alphabet=generic_protein)
-    gb_file = "THIS_IS_YOUR_OUTPUT_FILE.genbank"
+    gb_file = "THIS_IS_OUR_OUTPUT_FILE.genbank"
     Bio.SeqIO.write(records, gb_file, "genbank")
     file.close()
     return records, gb_file
@@ -50,14 +51,16 @@ def fasta_to_genbank(filename):
 
 
 def listIds(seq_record):
-    variant = seq_record.description.split('[')[1].replace(']', '')
+    # variant = seq_record.description.split('[')[1].replace(']', '')
+    variant = seq_record.id
     Entrez.email = 'myemail@ncbi.nlm.nih.gov'  # provide your email address
     db = 'nucleotide'  # set search to dbVar database
-    paramEutils = {'usehistory': 'Y', 'RetMax': '10'}  # Use Entrez search history to cache results
+    # db = 'protein'
+    paramEutils = {'usehistory': 'Y', 'RetMax': '1'}  # Use Entrez search history to cache results
     # download list of GIs for the species
     print('downloading sequences for species organism:' + variant)
     # generate query to Entrez eSearch
-    eSearch = Entrez.esearch(db=db, term='("' + variant + '"[Organism])', **paramEutils)
+    eSearch = Entrez.esearch(db=db, term='("' + variant + '"[Accession])', **paramEutils)
     # get eSearch result as dict object
     res = Entrez.read(eSearch)
     # take a peek of what's in the result (ie. WebEnv, Count, etc.)
@@ -74,6 +77,7 @@ def listIds(seq_record):
 def dataset(fileName):
     list_of_records, gb_file = fasta_to_genbank(fileName)
     input_handle = open(gb_file, "r")
+    countriesByGenbank = {}
     for seq_record in SeqIO.parse(input_handle, "genbank"):
         # for species in list_of_species:
         # trm = 'txid'
@@ -88,7 +92,7 @@ def dataset(fileName):
         # record = Entrez.read(handle, validate=False)
         list_of_ids = listIds(seq_record)
         if len(list_of_ids) > 0:
-            Entrez.email = "paolo_gratton@eva.mpg.de"  # provide email
+            Entrez.email = "grupo7@bioinformatica.ar"  # provide email
             ### read entry in xml and extract features..
             # use Entrez.efetch to read data in .xml format
             handle = Entrez.efetch(db="nucleotide", id=list_of_ids, retmode="xml")
@@ -225,7 +229,7 @@ def dataset(fileName):
             print('lat_lons')
             print(lat_lons[0])
             print(countries)
-        draw(countries[0])  # .split(',')[0].split(': ')[1])
+        countriesByGenbank[seq_record.id] = countries[0]
 
         # loop through all records
         '''for i in range(len(record)):
@@ -355,17 +359,24 @@ def dataset(fileName):
                 print(countries)
                 print('lat_lons')
                 print(lat_lons)'''
+    draw(countriesByGenbank)  # .split(',')[0].split(': ')[1])
     input_handle.close()
     os.remove(gb_file)
 
-def draw(city):
+
+def draw(countriesByGenbank):
     place_list = []
     geo = Nominatim(user_agent='BioLocation', timeout=2)
     plt.figure(figsize=(16, 12))
     # fig, ax = plt.subplots()
     myMap = Basemap(projection='robin', lon_0=0, lat_0=0)  # ax=ax
-    place = geo.geocode(city)
-    x, y = myMap(place.longitude, place.latitude)
+    labels = []
+    location = []
+    for (key, value) in countriesByGenbank.items():
+        place = geo.geocode(value)
+        x, y = myMap(place.longitude, place.latitude)
+        labels.append(key)
+        location.append((x, y))
     myMap.drawcoastlines()
     myMap.drawcountries()
     myMap.fillcontinents(color='brown')
@@ -374,11 +385,19 @@ def draw(city):
     # ax.text(x, y, 'label', ha='center', size=20)
     # myMap.plot(x, y, color='g', marker='o', markersize='15')
     # ax.scatter(x, y)
-    X = itertools.repeat(float(x), 1)
-    Y = itertools.repeat(float(y), 1)
-    labels = [city]
-    for label, xpt, ypt in zip(labels, X, Y):
+
+    longitudes = []
+    latitudes = []
+    for longitude, latitude in location:
+        longitudes.append(longitude)
+        latitudes.append(latitude)
+    for label, xpt, ypt in zip(labels, iter(longitudes), iter(latitudes)):
         plt.text(xpt, ypt, label)
+    # X = itertools.repeat(float(x), 1)
+    # Y = itertools.repeat(float(y), 1)
+    # for label, xpt, ypt in zip(labels, X, Y):
+    #    plt.text(xpt, ypt, label)
+
     # for i, (newX, newY) in enumerate(zip(X, Y), start=1):
     #    ax.annotate(city, (newX, newY), xytext=(5, 5), textcoords='offset points', color='g')
     '''for p in place_list:
