@@ -1,5 +1,11 @@
+import subprocess
+from pathlib import Path
 from tkinter import ttk, filedialog, Tk
 import os
+
+from Bio import SeqIO
+from Bio.Alphabet import generic_protein, generic_nucleotide, generic_dna
+
 from src import geolocation, evolutionaryInference
 from src.evolutionaryInference import clustalo
 
@@ -23,6 +29,10 @@ from src.evolutionaryInference import clustalo
 # raiz.mainloop()
 #########################################################################
 
+def is_fasta(filename):
+    with open(filename, "r") as handle:
+        fasta = SeqIO.parse(handle, "fasta")
+        return any(fasta)  # False when `fasta` is empty, i.e. wasn't a FASTA file
 
 class Root(Tk):
     def __init__(self):
@@ -41,14 +51,11 @@ class Root(Tk):
     def fileDialog(self):
         self.fileName = filedialog.askopenfilename(initialdir='/', title='Seleccionar archivo',
                                                    filetype=(('fasta', '*.fasta'), ('All Files', '*.*')))
-        if self.fileName.endswith('.fasta'):
+        if is_fasta(self.fileName):
+        # if self.fileName.endswith('.fasta'):
             self.button.configure(text=os.path.basename(self.fileName))
-
-            geolocation.dataset(self.fileName)
-
-            # out_file = os.path.basename(self.fileName) + '-aligned.fasta'
-            # clustalo.runClustalO("martin@gmail.com", self.fileName, outfilename=out_file, fmt='fasta')
-            # evolutionaryInference.fasta_to_tree(self.fileName)
+            geolocation.dataset(self.fileName, generic_dna)
+            # evolutionaryInference.fasta_to_tree(self.fileName) # TEST
         else:
             self.label = ttk.Label(self.labelFrame, text='')
             self.label.grid(column=1, row=2)

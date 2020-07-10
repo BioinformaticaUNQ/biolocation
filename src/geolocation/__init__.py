@@ -1,12 +1,14 @@
-import itertools
 import os
+import subprocess
 from pathlib import Path
-
-import Bio
-from Bio import Entrez
+from Bio import Entrez, AlignIO, Phylo
 from Bio import SeqIO
-from Bio.Alphabet import generic_protein
 from geopy.geocoders import Nominatim
+from ete3 import Tree, NodeStyle
+from src.evolutionaryInference import clustalo
+import matplotlib.image as mpimg
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 
 # home_dir = os.path.expanduser("~")
 # my_module = os.path.join(home_dir, "Anaconda3\Library\share")
@@ -15,7 +17,6 @@ my_module = os.path.join(project_dir, "resources")
 os.environ['PROJ_LIB'] = my_module
 
 from mpl_toolkits.basemap.test import Basemap
-import matplotlib.pyplot as plt
 
 
 def search_features(name, key, table):
@@ -27,35 +28,12 @@ def search_taxonID(table):
             element["GBQualifier_name"] == "db_xref" and element["GBQualifier_value"].split(":")[0] == 'taxon']
 
 
-def fasta_to_genbank(filename):
-    file = open(filename, "r")
-    # records = [seqrec for seqrec in Bio.SeqIO.parse(file, "fasta", alphabet=generic_protein)]
-    records = Bio.SeqIO.parse(file, "fasta", alphabet=generic_protein)
-    gb_file = "THIS_IS_OUR_OUTPUT_FILE.genbank"
-    Bio.SeqIO.write(records, gb_file, "genbank")
-    file.close()
-    return records, gb_file
-
-    # format it for R, e.g.:
-    # os.system("sed 's/\t \t/\tNA\t/g; s/\t $/\tNA/g; s/\t|//g' tax_report.txt > all_mammals_WR_NCBI_taxID.txt")
-    # taxidTable = pandas.read_table('tax_report.txt')
-    # del taxidTable['Numero']
-    # taxlist = taxidTable
-    # taxlist = pandas.read_table('tax_report.txt', header=0, sep='\t')
-    # with open('all_mammals.taxlist.NCBI.txt', "w") as fd:
-    #    fd.writelines(str(taxlist))
-    # write .table(taxlist, file='all_mammals.taxlist.NCBI.txt', sep='\t', quote=FALSE, row.names = F)
-    # taxIdList = [t for t in taxidTable['taxid']]
-    # print(taxIdList)
-    # return taxIdList
-
-
 def listIds(seq_record):
-    # variant = seq_record.description.split('[')[1].replace(']', '')
     variant = seq_record.id
-    Entrez.email = 'myemail@ncbi.nlm.nih.gov'  # provide your email address
+    Entrez.email = 'grupo6@bioinformatica.com.ar'  # provide your email address
     db = 'nucleotide'  # set search to dbVar database
     # db = 'protein'
+    # db = 'pubmed'
     paramEutils = {'usehistory': 'Y', 'RetMax': '1'}  # Use Entrez search history to cache results
     # download list of GIs for the species
     print('downloading sequences for species organism:' + variant)
@@ -74,298 +52,91 @@ def listIds(seq_record):
     return res['IdList']
 
 
-def dataset(fileName):
-    list_of_records, gb_file = fasta_to_genbank(fileName)
-    input_handle = open(gb_file, "r")
+def dataset(fileName, alphabet):
+    out_file = os.path.basename(fileName) + '-aligned.fasta'
+    clustalo.runClustalO("grupo6@bioinformatica.com", fileName, outfilename=out_file, fmt='clustal')
+    # aligned_file = open(out_file, 'r')
+    # align = AlignIO.read(aligned_file, "clustal")
+    # aligned_file.close()
+    AlignIO.convert(out_file, "clustal", "egfr-family.phy", "phylip-relaxed")
+    os.remove(out_file)
+    # calculator = DistanceCalculator('blastn')
+    # dm = calculator.get_distance(align)
+    # constructor = DistanceTreeConstructor()
+    # tree = constructor.nj(dm)
+    iqtree_exe = os.path.join(project_dir, 'resources/iqtree-1.6.12-Windows/bin/iqtree.exe')
+    # subprocess.run(
+    #    [iqtree_exe, "-s", "egfr-family.phy", "-m", "TIM3+R5", "-alrt", "1000", "-bo", "100", "-wbtl", "-nt", "AUTO",
+    #     "-redo"])
+    subprocess.run(
+        [iqtree_exe, "-s", "egfr-family.phy", "-m", "TIM3+R5", "-alrt", "1000", "-bo", "100", "-wbtl", "-nt", "AUTO",
+         "-redo"])
+    os.remove('egfr-family.phy')
+    seqTree = open("egfr-family.phy.bionj", "r")
+    tree_phy = Tree(str(seqTree.readlines().__getitem__(0)))
+    seqTree.close()
+    os.remove("egfr-family.phy.bionj")
+    os.remove("egfr-family.phy.ckp.gz")
+    os.remove("egfr-family.phy.boottrees")
+    os.remove("egfr-family.phy.log")
+    os.remove("egfr-family.phy.mldist")
+    os.remove("egfr-family.phy.treefile")
+    Tree.convert_to_ultrametric(tree_phy)
+    # tree.rooted = True
+    # tree_phy = tree.as_phyloxml()
+    # tree_phy = Phylogeny.from_tree(tree_phy)
+    # tree_phy.root.color = (128, 128, 128)
+
+    # location
     countriesByGenbank = {}
-    for seq_record in SeqIO.parse(input_handle, "genbank"):
-        # for species in list_of_species:
-        # trm = 'txid'
-        # trm += str(species)
-        # trm += '[orgn] AND ddbj embl genbank with limits[filt] NOT transcriptome[All Fields] NOT mRNA[filt] NOT scaffold[All Fields]'
-        # build genbank search term..
-        # provide email
-        # Entrez.email = "paolo_gratton@eva.mpg.de"
-        # download list of GIs for the species
-        # print('downloading sequences for species txid:' + str(species))
-        # handle = Entrez.esearch(db="Nucleotide", term=trm, RetMax="10")
-        # record = Entrez.read(handle, validate=False)
+    for seq_record in SeqIO.parse(fileName, "fasta"):
         list_of_ids = listIds(seq_record)
         if len(list_of_ids) > 0:
-            Entrez.email = "grupo7@bioinformatica.ar"  # provide email
+            Entrez.email = "grupo6@bioinformatica.com.ar"
             ### read entry in xml and extract features..
             # use Entrez.efetch to read data in .xml format
             handle = Entrez.efetch(db="nucleotide", id=list_of_ids, retmode="xml")
             record = Entrez.read(handle, validate=False)
             # reset lists for values to be stored
-            accessions = []
-            definitions = []
-            organisms = []
-            taxonIDs = []
             countries = []
             lat_lons = []
-            genes = []
-            rRNAs = []
-            tRNAs = []
-            genera = []
-            isolates = []
-            haplotypes = []
-            pop_variants = []
-            dloop = []
-            CDSs = []
-            organelles = []
-            ref_pubmed = []
-            ref_authors = []
-            ref_journal = []
-            ref_titles = []
-
             feattab = record[0]['GBSeq_feature-table']
-
             refs = record[0]['GBSeq_references']
-
             # get and name the 'source' section (s)
             sourcetab = search_features('source', 'GBFeature_key', feattab)
             # output.write(record[i]['GBSeq_primary-accession'] + ": " + str(len(sourcetab))+ "\n") # this was just a check!
 
             # create temporary objects to collect values of the fields of interest.. note that we run a loop through 'sourcetab'.. It is probably not necessary, since there should be only one 'source' section.. but we do it this way because the 'gene' sections will be often multiple..
-            temp_organisms = []
-            temp_taxonIDs = []
             temp_countries = []
             temp_lat_lons = []
-            temp_isolates = []
-            temp_pop_variants = []
-            temp_haplotypes = []
-            temp_organelles = []
-
             if len(sourcetab) > 0:
                 for j in range(len(sourcetab)):
-                    if len(search_features('organism', 'GBQualifier_name', sourcetab[j][
-                        'GBFeature_quals'])) > 0:  # store the organism name (Linnean binomial)
-                        temp_organisms.append(
-                            search_features('organism', 'GBQualifier_name', sourcetab[j]['GBFeature_quals'])[0][
-                                'GBQualifier_value'])  # we assume that there is only one field 'organism' per each source field..
-                    else:
-                        temp_organisms.append('NA')
-
-                    # store organelle information
-                    if len(search_features('organelle', 'GBQualifier_name',
-                                           sourcetab[j]['GBFeature_quals'])) > 0:
-                        temp_organelles.append(
-                            search_features('organelle', 'GBQualifier_name', sourcetab[j]['GBFeature_quals'])[
-                                0][
-                                'GBQualifier_value'])  # we assume that there is only one field 'organelle' per each source field..
-                    else:
-                        temp_organelles.append('NA')
-
-                        # store the isolate name
-                    if len(search_features('isolate', 'GBQualifier_name', sourcetab[j]['GBFeature_quals'])) > 0:
-                        temp_isolates.append(
-                            search_features('isolate', 'GBQualifier_name', sourcetab[j]['GBFeature_quals'])[0][
-                                'GBQualifier_value'])  # we assume that there is only one field 'isolate' per each source field..
-                    else:
-                        temp_isolates.append('NA')
-
-                    # store the pop_variant
-                    if len(search_features('pop_variant', 'GBQualifier_name',
-                                           sourcetab[j]['GBFeature_quals'])) > 0:
-                        temp_pop_variants.append(
-                            search_features('pop_variant', 'GBQualifier_name', sourcetab[j]['GBFeature_quals'])[
-                                0][
-                                'GBQualifier_value'])  # we assume that there is only one field 'isolate' per each source field..
-                    else:
-                        temp_pop_variants.append('NA')
-
-                    # store the haplotype
-                    if len(search_features('haplotype', 'GBQualifier_name',
-                                           sourcetab[j]['GBFeature_quals'])) > 0:
-                        temp_haplotypes.append(
-                            search_features('haplotype', 'GBQualifier_name', sourcetab[j]['GBFeature_quals'])[
-                                0][
-                                'GBQualifier_value'])  # we assume that there is only one field 'isolate' per each source field..
-                    else:
-                        temp_haplotypes.append('NA')
-
-                        # store the NCBI taxonID
-                    if len(search_taxonID(sourcetab[0]['GBFeature_quals'])) > 0:
-                        temp_taxonIDs.append(
-                            search_taxonID(sourcetab[0]['GBFeature_quals'])[0]['GBQualifier_value'].split(':')[
-                                1])  # we assume that there is only one sub-field 'taxon:' per each source field..
-                    else:
-                        temp_taxonIDs.append('NA')
-
-                        # store country information
+                    # store country information
                     if len(search_features('country', 'GBQualifier_name', sourcetab[j]['GBFeature_quals'])) > 0:
                         temp_countries.append(
                             search_features('country', 'GBQualifier_name', sourcetab[j]['GBFeature_quals'])[0][
                                 'GBQualifier_value'])  # we assume that there is only one field 'organism' per each source field..
                     else:
                         temp_countries.append('NA')
-
-                        # store latitude and longitude
+                    # store latitude and longitude
                     if len(search_features('lat_lon', 'GBQualifier_name', sourcetab[j]['GBFeature_quals'])) > 0:
                         temp_lat_lons.append(
                             search_features('lat_lon', 'GBQualifier_name', sourcetab[j]['GBFeature_quals'])[0][
                                 'GBQualifier_value'])  # we assume that there is only one field 'lat_lon' per each source field..
                     else:
                         temp_lat_lons.append('NA')
-
-                organisms.append(','.join(temp_organisms))
-                taxonIDs.append(','.join(temp_taxonIDs))
                 countries.append(','.join(temp_countries))
                 lat_lons.append(','.join(temp_lat_lons))
-                isolates.append(','.join(temp_isolates))
-                haplotypes.append(','.join(temp_haplotypes))
-                pop_variants.append(','.join(temp_pop_variants))
-                organelles.append(','.join(temp_organelles))
             else:
-                organisms.append('NA')
-                taxonIDs.append('NA')
                 countries.append('NA')
                 lat_lons.append('NA')
-                isolates.append('NA')
-                haplotypes.append('NA')
-                pop_variants.append('NA')
-                organelles.append('NA')
-            print('lat_lons')
-            print(lat_lons[0])
+            print('country')
             print(countries)
         countriesByGenbank[seq_record.id] = countries[0]
-
-        # loop through all records
-        '''for i in range(len(record)):
-            if float(record[i]['GBSeq_length']) < 20001:  # I am ignoring all sequences longer than 20000 bp!! (they tend to be fucking genomic scaffolds..), but it will likely not be enough to let it go through everything!!!
-                # genera.append(genus)  # store the genus for this sequence
-                accessions.append(record[i]['GBSeq_primary-accession'])  # store the sequence accession number
-                definitions.append(record[i]['GBSeq_definition'])  # store sequence definition (description)
-                # name the 'feature table' section in the entry
-                feattab = record[i]['GBSeq_feature-table']
-
-                refs = record[i]['GBSeq_references']  # I decided to take only the first reference, at the moment..
-                if len(re.findall("GBReference_pubmed", str(record[i]['GBSeq_references'][0].keys()))) > 0:
-                    ref_pubmed.append(record[i]['GBSeq_references'][0]['GBReference_pubmed'])
-                else:
-                    ref_pubmed.append('NA')
-                if len(re.findall("GBReference_authors", str(record[i]['GBSeq_references'][0].keys()))) > 0:
-                    ref_authors.append(record[i]['GBSeq_references'][0]['GBReference_authors'])
-                else:
-                    ref_authors.append('NA')
-                if len(re.findall("GBReference_title", str(record[i]['GBSeq_references'][0].keys()))) > 0:
-                    ref_titles.append(record[i]['GBSeq_references'][0]['GBReference_title'])
-                else:
-                    ref_titles.append('NA')
-                if len(re.findall("GBReference_journal", str(record[i]['GBSeq_references'][0].keys()))) > 0:
-                    ref_journal.append(record[i]['GBSeq_references'][0]['GBReference_journal'])
-                else:
-                    ref_journal.append('NA')
-
-                # get and name the 'source' section (s)
-                sourcetab = search_features('source', 'GBFeature_key', feattab)
-                # output.write(record[i]['GBSeq_primary-accession'] + ": " + str(len(sourcetab))+ "\n") # this was just a check!
-
-                # create temporary objects to collect values of the fields of interest.. note that we run a loop through 'sourcetab'.. It is probably not necessary, since there should be only one 'source' section.. but we do it this way because the 'gene' sections will be often multiple..
-                temp_organisms = []
-                temp_taxonIDs = []
-                temp_countries = []
-                temp_lat_lons = []
-                temp_isolates = []
-                temp_pop_variants = []
-                temp_haplotypes = []
-                temp_organelles = []
-
-                if len(sourcetab) > 0:
-                    for j in range(len(sourcetab)):
-                        if len(search_features('organism', 'GBQualifier_name', sourcetab[j][
-                            'GBFeature_quals'])) > 0:  # store the organism name (Linnean binomial)
-                            temp_organisms.append(
-                                search_features('organism', 'GBQualifier_name', sourcetab[j]['GBFeature_quals'])[0][
-                                    'GBQualifier_value'])  # we assume that there is only one field 'organism' per each source field..
-                        else:
-                            temp_organisms.append('NA')
-
-                        # store organelle information
-                        if len(search_features('organelle', 'GBQualifier_name', sourcetab[j]['GBFeature_quals'])) > 0:
-                            temp_organelles.append(
-                                search_features('organelle', 'GBQualifier_name', sourcetab[j]['GBFeature_quals'])[0][
-                                    'GBQualifier_value'])  # we assume that there is only one field 'organelle' per each source field..
-                        else:
-                            temp_organelles.append('NA')
-
-                            # store the isolate name
-                        if len(search_features('isolate', 'GBQualifier_name', sourcetab[j]['GBFeature_quals'])) > 0:
-                            temp_isolates.append(
-                                search_features('isolate', 'GBQualifier_name', sourcetab[j]['GBFeature_quals'])[0][
-                                    'GBQualifier_value'])  # we assume that there is only one field 'isolate' per each source field..
-                        else:
-                            temp_isolates.append('NA')
-
-                        # store the pop_variant
-                        if len(search_features('pop_variant', 'GBQualifier_name', sourcetab[j]['GBFeature_quals'])) > 0:
-                            temp_pop_variants.append(
-                                search_features('pop_variant', 'GBQualifier_name', sourcetab[j]['GBFeature_quals'])[0][
-                                    'GBQualifier_value'])  # we assume that there is only one field 'isolate' per each source field..
-                        else:
-                            temp_pop_variants.append('NA')
-
-                        # store the haplotype
-                        if len(search_features('haplotype', 'GBQualifier_name', sourcetab[j]['GBFeature_quals'])) > 0:
-                            temp_haplotypes.append(
-                                search_features('haplotype', 'GBQualifier_name', sourcetab[j]['GBFeature_quals'])[0][
-                                    'GBQualifier_value'])  # we assume that there is only one field 'isolate' per each source field..
-                        else:
-                            temp_haplotypes.append('NA')
-
-                            # store the NCBI taxonID
-                        if len(search_taxonID(sourcetab[0]['GBFeature_quals'])) > 0:
-                            temp_taxonIDs.append(
-                                search_taxonID(sourcetab[0]['GBFeature_quals'])[0]['GBQualifier_value'].split(':')[
-                                    1])  # we assume that there is only one sub-field 'taxon:' per each source field..
-                        else:
-                            temp_taxonIDs.append('NA')
-
-                            # store country information
-                        if len(search_features('country', 'GBQualifier_name', sourcetab[j]['GBFeature_quals'])) > 0:
-                            temp_countries.append(
-                                search_features('country', 'GBQualifier_name', sourcetab[j]['GBFeature_quals'])[0][
-                                    'GBQualifier_value'])  # we assume that there is only one field 'organism' per each source field..
-                        else:
-                            temp_countries.append('NA')
-
-                            # store latitude and longitude
-                        if len(search_features('lat_lon', 'GBQualifier_name', sourcetab[j]['GBFeature_quals'])) > 0:
-                            temp_lat_lons.append(
-                                search_features('lat_lon', 'GBQualifier_name', sourcetab[j]['GBFeature_quals'])[0][
-                                    'GBQualifier_value'])  # we assume that there is only one field 'lat_lon' per each source field..
-                        else:
-                            temp_lat_lons.append('NA')
-
-                    organisms.append(','.join(temp_organisms))
-                    taxonIDs.append(','.join(temp_taxonIDs))
-                    countries.append(','.join(temp_countries))
-                    lat_lons.append(','.join(temp_lat_lons))
-                    isolates.append(','.join(temp_isolates))
-                    haplotypes.append(','.join(temp_haplotypes))
-                    pop_variants.append(','.join(temp_pop_variants))
-                    organelles.append(','.join(temp_organelles))
-                else:
-                    organisms.append('NA')
-                    taxonIDs.append('NA')
-                    countries.append('NA')
-                    lat_lons.append('NA')
-                    isolates.append('NA')
-                    haplotypes.append('NA')
-                    pop_variants.append('NA')
-                    organelles.append('NA')
-                print('countries')
-                print(countries)
-                print('lat_lons')
-                print(lat_lons)'''
-    draw(countriesByGenbank)  # .split(',')[0].split(': ')[1])
-    input_handle.close()
-    os.remove(gb_file)
+    draw(countriesByGenbank, tree_phy)
 
 
-def draw(countriesByGenbank):
-    place_list = []
+def draw(countriesByGenbank, tree_phy):
     geo = Nominatim(user_agent='BioLocation', timeout=2)
     plt.figure(figsize=(16, 12))
     # fig, ax = plt.subplots()
@@ -379,7 +150,7 @@ def draw(countriesByGenbank):
         location.append((x, y))
     myMap.drawcoastlines()
     myMap.drawcountries()
-    myMap.fillcontinents(color='brown')
+    myMap.fillcontinents(color='white')
     myMap.drawmapboundary(fill_color='aqua')
     # myMap.bluemarble()
     # ax.text(x, y, 'label', ha='center', size=20)
@@ -391,8 +162,22 @@ def draw(countriesByGenbank):
     for longitude, latitude in location:
         longitudes.append(longitude)
         latitudes.append(latitude)
-    for label, xpt, ypt in zip(labels, iter(longitudes), iter(latitudes)):
-        plt.text(xpt, ypt, label)
+    colors = list(mcolors.TABLEAU_COLORS)
+    colorsInMap = {}
+    markersize = 15
+    for label, xpt, ypt, color in zip(labels, iter(longitudes), iter(latitudes), colors):
+        if colorsInMap.get((xpt, ypt)):
+            colorsInMap.get((xpt, ypt)).append(color)
+            myMap.plot(xpt, ypt, marker='o', markerfacecolor=color, markersize=str(markersize-len(colorsInMap.get((xpt, ypt)))-5))
+        else:
+            colorsInMap[(xpt, ypt)] = [color]
+            myMap.plot(xpt, ypt, marker='o', markerfacecolor=color, markersize=str(markersize))
+        # mrca = tree_phy.common_ancestor({"name": label})
+        # mrca.branch_length = mrca.branch_length + 0.1
+        # mrca.color = color.split(':')[1]
+        nstyle = NodeStyle()
+        nstyle["fgcolor"] = color.split(':')[1]
+        tree_phy.get_leaves_by_name(label)[0].set_style(nstyle)
     # X = itertools.repeat(float(x), 1)
     # Y = itertools.repeat(float(y), 1)
     # for label, xpt, ypt in zip(labels, X, Y):
@@ -405,4 +190,10 @@ def draw(countriesByGenbank):
         time.sleep(0.5)
         x, y = myMap(p.longitude, p.latitude)
         myMap.plot(x, y, color='g', marker='o', markersize='15')'''
+    # Phylo.draw(tree_phy)
+    tree_phy.render("mytree.png")
+    fig = plt.figure()
+    img = mpimg.imread('mytree.png')
+    imgplot = plt.imshow(img)
     plt.show()
+    os.remove('mytree.png')
