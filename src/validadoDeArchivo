@@ -3,7 +3,7 @@ import os
 from Bio import SeqIO
 from Bio.SeqIO.FastaIO import SimpleFastaParser
 
-limiteDeSecuencias = 2
+limiteDeSecuencias = 3
 
 
 def check_is_fasta(filename):
@@ -23,23 +23,20 @@ def check_contenido(filename):
     with open(filename) as handle:
         lines = handle.read().splitlines(True)
 
+    lines = eliminarEspaciosEnBlanco(lines)
+    largoDePrimerSecuencia = len(lines[0])
+
+    lines = list(filter(lambda seq: comienzaConCaracter(seq), lines))
     try:
         checkearCantidadDeSecuencias(lines)
     except:
-        print("se rompio")
+        print("se cortara la lista de secuencias --- debe abrir una ventana para mostrar el msj")
         lines = lines[:limiteDeSecuencias]
 
-    lineasSinEspacios = eliminarEspaciosEnBlanco(lines)
-    largoDePrimerSecuencia = len(lineasSinEspacios[0])
+    comprobarSiSonTodosDelMismoTipo(lines)
 
-    if not comienzaConCaracter(lines) and not secuenciasTienenMismoLargo(
-            lineasSinEspacios, largoDePrimerSecuencia):
-        raise Exception('secuencia no valida')
-    #if not secuenciasTienenMismoLargo(lineasSinEspacios, largoDePrimerSecuencia):
-    # raise Exception('todas las secuencias deben estar alineadas ¿desea alinearlas?')
-    #esto deberia estar aparte si se quiere la exception para realizar alguna accion, como la de alinear, pero para ser mas performante se deja todo junto en el anterior
-    for i in lines:
-        print(i)
+    secuenciasTienenMismoLargo(lines,largoDePrimerSecuencia)
+
 
 
 def checkearCantidadDeSecuencias(lines):
@@ -54,11 +51,21 @@ def comienzaConCaracter(lines):
 
 
 def eliminarEspaciosEnBlanco(lines):
-    return [line.replace("\n", "").replace("\4", "") for line in lines]
+    return [line.replace("\n", "").replace("\r", "") for line in lines]
 
 
 def secuenciasTienenMismoLargo(lines, largoDePrimerSecuencia):
-    return any((len(line) == largoDePrimerSecuencia) for line in lines)
+    if any((len(line) != largoDePrimerSecuencia) for line in lines):
+      raise Exception("Secuencias no alineadas, desea alinearlas?") ##deberia preguntar esto en un modal y al confirmar deberia llamar a algo que haga la alineacion
+
+def comprobarSiSonTodosDelMismoTipo(lines):
+  tipo= "proteina"
+  if all (("gta" in seq or "ta" in seq) for seq in lines) :
+    tipo= "nucleotido"
+  else:
+    raise Exception("Las secuencias ingresadas no son del mismo tipo")
+
+
 
 
 if __name__ == "__main__":
