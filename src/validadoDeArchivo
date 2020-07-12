@@ -1,0 +1,65 @@
+my_file = "sarasa.fasta"
+import os
+from Bio import SeqIO
+from Bio.SeqIO.FastaIO import SimpleFastaParser
+
+limiteDeSecuencias = 2
+
+
+def check_is_fasta(filename):
+    ext = os.path.splitext(filename)[-1].lower()
+    # Now we can simply use == to check for equality, no need for wildcards.
+    if ext != ".fasta":
+        raise Exception(
+            'el formato del archivo debe ser fasta, pedazo de forre')
+
+
+def valid(filename):
+    check_is_fasta(filename)
+    check_contenido(filename)
+
+
+def check_contenido(filename):
+    with open(filename) as handle:
+        lines = handle.read().splitlines(True)
+
+    try:
+        checkearCantidadDeSecuencias(lines)
+    except:
+        print("se rompio")
+        lines = lines[:limiteDeSecuencias]
+
+    lineasSinEspacios = eliminarEspaciosEnBlanco(lines)
+    largoDePrimerSecuencia = len(lineasSinEspacios[0])
+
+    if not comienzaConCaracter(lines) and not secuenciasTienenMismoLargo(
+            lineasSinEspacios, largoDePrimerSecuencia):
+        raise Exception('secuencia no valida')
+    #if not secuenciasTienenMismoLargo(lineasSinEspacios, largoDePrimerSecuencia):
+    # raise Exception('todas las secuencias deben estar alineadas ¿desea alinearlas?')
+    #esto deberia estar aparte si se quiere la exception para realizar alguna accion, como la de alinear, pero para ser mas performante se deja todo junto en el anterior
+    for i in lines:
+        print(i)
+
+
+def checkearCantidadDeSecuencias(lines):
+    if (len(lines) > limiteDeSecuencias):
+        textoParseado = 'solo se van a utilizar las primeras {0} secuencias'.format(
+            limiteDeSecuencias)
+        raise Exception(textoParseado)
+
+
+def comienzaConCaracter(lines):
+    return any((line.startswith(">")) for line in lines)
+
+
+def eliminarEspaciosEnBlanco(lines):
+    return [line.replace("\n", "").replace("\4", "") for line in lines]
+
+
+def secuenciasTienenMismoLargo(lines, largoDePrimerSecuencia):
+    return any((len(line) == largoDePrimerSecuencia) for line in lines)
+
+
+if __name__ == "__main__":
+    valid(my_file)
