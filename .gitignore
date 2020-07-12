@@ -11,6 +11,10 @@ src/*.log
 src/*.mldist
 src/*.treefile
 src/*.xml
+src/*.boottrees
+src/*mytree.png
+src/*.nex
+src/*.contree
 
 # Created by .ignore support plugin (hsz.mobi)
 ### Python template

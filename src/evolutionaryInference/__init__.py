@@ -112,3 +112,23 @@ def fasta_to_tree(filename):
     # egfr = Phylo.read('egfr-family-annotated.xml', 'phyloxml')
     # print(egfr)
     # Phylo.draw_ascii(egfr)
+
+def iqtree_run(file, bootstrap):
+    '''file=string
+    bootstrap=int
+    iqtree -s alineamiento -bb 1000'''
+    # - Import libraries -#
+    import shutil, os
+    import subprocess
+    ##- creating a directory for the results -###
+    dirName = 'IQtree_results'
+    try:
+        os.mkdir(dirName)
+        print("Directory ", dirName, " Created ")
+    except FileExistsError:
+        print("Directory ", dirName, " already exists")
+    cwd = os.getcwd()
+    shutil.move(cwd + '/' + file, cwd + '/' + dirName)
+    os.chdir(cwd + '/' + dirName)
+    subprocess.call(['iqtree', '-s', file, '-bb', str(bootstrap)])
+    print('Job done!')

@@ -4,7 +4,7 @@ from pathlib import Path
 from Bio import Entrez, AlignIO, Phylo
 from Bio import SeqIO
 from geopy.geocoders import Nominatim
-from ete3 import Tree, NodeStyle
+from ete3 import Tree, NodeStyle, TreeStyle
 from src.evolutionaryInference import clustalo
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
@@ -52,7 +52,7 @@ def listIds(seq_record):
     return res['IdList']
 
 
-def dataset(fileName, alphabet):
+def dataset(fileName, alphabet, bootstrap):
     out_file = os.path.basename(fileName) + '-aligned.fasta'
     clustalo.runClustalO("grupo6@bioinformatica.com", fileName, outfilename=out_file, fmt='clustal')
     # aligned_file = open(out_file, 'r')
@@ -68,20 +68,19 @@ def dataset(fileName, alphabet):
     # subprocess.run(
     #    [iqtree_exe, "-s", "egfr-family.phy", "-m", "TIM3+R5", "-alrt", "1000", "-bo", "100", "-wbtl", "-nt", "AUTO",
     #     "-redo"])
-    subprocess.run(
-        [iqtree_exe, "-s", "egfr-family.phy", "-m", "TIM3+R5", "-alrt", "1000", "-bo", "100", "-wbtl", "-nt", "AUTO",
-         "-redo"])
+    # subprocess.call(['iqtree','-s', file , '-bb', str(bootstrap)])
+    subprocess.run([iqtree_exe, '-s', "egfr-family.phy", '-bb', str(bootstrap)])
     os.remove('egfr-family.phy')
-    seqTree = open("egfr-family.phy.bionj", "r")
+    # seqTree = open("egfr-family.phy.bionj", "r")
+    seqTree = open("egfr-family.phy.treefile", "r")
     tree_phy = Tree(str(seqTree.readlines().__getitem__(0)))
     seqTree.close()
     os.remove("egfr-family.phy.bionj")
     os.remove("egfr-family.phy.ckp.gz")
-    os.remove("egfr-family.phy.boottrees")
-    os.remove("egfr-family.phy.log")
+    # os.remove("egfr-family.phy.boottrees")
     os.remove("egfr-family.phy.mldist")
-    os.remove("egfr-family.phy.treefile")
-    Tree.convert_to_ultrametric(tree_phy)
+    # os.remove("egfr-family.phy.treefile")
+    # Tree.convert_to_ultrametric(tree_phy)
     # tree.rooted = True
     # tree_phy = tree.as_phyloxml()
     # tree_phy = Phylogeny.from_tree(tree_phy)
@@ -191,9 +190,15 @@ def draw(countriesByGenbank, tree_phy):
         x, y = myMap(p.longitude, p.latitude)
         myMap.plot(x, y, color='g', marker='o', markersize='15')'''
     # Phylo.draw(tree_phy)
-    tree_phy.render("mytree.png")
+    ts = TreeStyle()
+    ts.show_branch_support = True
+    tree_phy.render("mytree.png", tree_style=ts)
     fig = plt.figure()
     img = mpimg.imread('mytree.png')
     imgplot = plt.imshow(img)
-    plt.show()
     os.remove('mytree.png')
+    os.remove('egfr-family.phy.iqtree')
+    os.remove('egfr-family.phy.contree')
+    os.remove('egfr-family.phy.model.gz')
+    os.remove('egfr-family.phy.splits.nex')
+    os.remove('egfr-family.phy.treefile')
