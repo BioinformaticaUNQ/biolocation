@@ -63,36 +63,66 @@ class Root(Tk):
         self.fileName = filedialog.askopenfilename(initialdir='/', title='Seleccionar archivo',
                                                    filetype=(('fasta', '*.fasta'), ('All Files', '*.*')))
         try:
-            if self.is_fasta() and self.is_content_valid_fasta():
-                self.button.configure(text=os.path.basename(self.fileName))
-                self.waitingLabel()
-                geolocation.dataset(self.fileName, alphabet=SEQUENCE_TYPE.get(self.typeSequence.get()), bootstrap=self.bootstrap.get())
-                # evolutionaryInference.fasta_to_tree(self.fileName) # TEST
-                self.waitingLabel.config(text="Procesado con exito")
-                self.update()
-                threading.Thread(target=lambda: os.system('egfr-family.phy.log')).start()
-                threading.Thread(target=lambda: plt.show()).run()
-            else:
-                self.label = ttk.Label(self.labelFrameOpenFile, text='')
-                self.label.grid(column=1, row=2)
-                self.label.configure(text='El formato del archivo es invalido')
+            self.check_fasta()
+            self.button.configure(text=os.path.basename(self.fileName))
+            self.waitingLabel()
+            geolocation.dataset(self.fileName, alphabet=SEQUENCE_TYPE.get(self.typeSequence.get()),
+                                bootstrap=self.bootstrap.get(), aligned=self.aligned)
+            # evolutionaryInference.fasta_to_tree(self.fileName) # TEST
+            self.waitingLabel.config(text="Procesado con exito")
+            self.update()
+            threading.Thread(target=lambda: os.system('egfr-family.phy.log')).start()
+            threading.Thread(target=lambda: plt.show()).run()
         except FileNotFoundError:
             None
+        except Exception:
+            None
+
+    def check_fasta(self):
+        self.aligned = False
+        self.label = ttk.Label(self.labelFrameOpenFile, text='')
+        self.label.grid(column=1, row=2)
+        self.is_fasta()
+        self.is_content_valid_fasta()
 
     def is_fasta(self):
         with open(self.fileName, "r") as handle:
             fasta = SeqIO.parse(handle, "fasta")
-            return any(fasta)  # False when `fasta` is empty, i.e. wasn't a FASTA file
+            if not any(fasta):  # False when `fasta` is empty, i.e. wasn't a FASTA file
+                msg = 'El formato del archivo debe ser fasta'
+                self.label.configure(text=msg)
+                raise Exception(msg)
 
     def is_content_valid_fasta(self):
         with open(self.fileName, "r") as handle:
-            lines = handle.read().splitlines(True)
-            # seq = [line for line in lines if not line.startswith(">")]
-            # seq = "".join(seq)
-            # seq = seq.replace("\n", "")
-            # seq = seq.replace("\r", "")
-            # print(seq)
-            return lines[0].startswith('>')
+            lines = iter(handle.read().splitlines(True))
+            nextLine = next(lines, None)
+            seqs = []
+            seq = []
+            if nextLine.startswith('>'):
+                nextLine = next(lines, None)
+                while nextLine is not None:
+                    if not nextLine.startswith('>'):
+                        seq.append(nextLine)
+                        nextLine = next(lines, None)
+                    else:
+                        seq = "".join(seq)
+                        seq = seq.replace("\n", "")
+                        seq = seq.replace("\r", "")
+                        seqs.append(seq)
+                        seq = []
+                        nextLine = next(lines, None)
+                seq = "".join(seq)
+                seq = seq.replace("\n", "")
+                seq = seq.replace("\r", "")
+                seqs.append(seq)
+                if len(set(list(map(lambda sequence: len(sequence), seqs))))==1:
+                    self.aligned = True
+                    raise Exception("Secuencias alineadas, se salteara ese paso")
+            else:
+                msg = 'El formato del contenido debe comenzar con > para cada header por secuencia'
+                self.label.configure(text=msg)
+                raise Exception(msg)
 
     def waitingLabel(self):
         self.waitingLabel = ttk.Label(self.labelFrameWaiting, text='')
