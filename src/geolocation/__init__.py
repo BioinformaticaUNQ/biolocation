@@ -53,7 +53,6 @@ def listIds(seq_record):
 
 
 def dataset(fileName, alphabet, bootstrap, aligned):
-    print(aligned)
     out_file = os.path.basename(fileName) + '-aligned.fasta'
     clustalo.runClustalO("grupo6@bioinformatica.com", fileName, outfilename=out_file, fmt='clustal')
     # aligned_file = open(out_file, 'r')

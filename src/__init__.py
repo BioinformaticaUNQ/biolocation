@@ -31,6 +31,14 @@ import matplotlib.pyplot as plt
 SEQUENCE_TYPE = {"Nucleotido": generic_nucleotide, "Proteina": generic_protein}
 
 
+class TypeSequenceException(Exception):
+    pass
+
+
+class SequenceAlignedException(object):
+    pass
+
+
 class Root(Tk):
     def __init__(self):
         super(Root, self).__init__()
@@ -83,7 +91,12 @@ class Root(Tk):
         self.label = ttk.Label(self.labelFrameOpenFile, text='')
         self.label.grid(column=1, row=2)
         self.is_fasta()
-        self.is_content_valid_fasta()
+        try:
+            self.is_content_valid_fasta()
+        except SequenceAlignedException:
+            pass
+        except TypeSequenceException:
+            pass
 
     def is_fasta(self):
         with open(self.fileName, "r") as handle:
@@ -116,9 +129,22 @@ class Root(Tk):
                 seq = seq.replace("\n", "")
                 seq = seq.replace("\r", "")
                 seqs.append(seq)
-                if len(set(list(map(lambda sequence: len(sequence), seqs))))==1:
+                if len(set(list(map(lambda sequence: len(sequence), seqs)))) == 1:
                     self.aligned = True
-                    raise Exception("Secuencias alineadas, se salteara ese paso")
+                    if next(filter(lambda sequence: sequence.find('-'), seqs), None) is not None:
+                        msg = 'Secuencias alineadas, se salteara ese paso'
+                        self.label.configure(text=msg)
+                        raise SequenceAlignedException(msg)
+                if len(set(list(map(lambda sequence: len(list(set(sequence))), seqs)))) == 1:
+                    for sequence in seqs:
+                        seqDistinct = list(set(sequence))
+                        seqDistinct.sort()
+                        if seqDistinct == ['A', 'C', 'G', 'T'] or seqDistinct == ['A', 'C', 'G', 'U']:
+                            if self.typeSequence.get().lower() != "nucleotido":
+                                msg = 'Ha especificado tipo de secuencia: '+self.typeSequence.get()+' y son secuencias de nucleotidos'
+                                print(msg)
+                                self.label.configure(text=msg)
+                                raise TypeSequenceException(msg)
             else:
                 msg = 'El formato del contenido debe comenzar con > para cada header por secuencia'
                 self.label.configure(text=msg)
