@@ -1,7 +1,7 @@
 import subprocess
 import threading
 from pathlib import Path
-from tkinter import ttk, filedialog, Tk, IntVar, Entry, StringVar, OptionMenu, Label, Frame
+from tkinter import ttk, filedialog, Tk, IntVar, Entry, StringVar, OptionMenu, Label, Frame, messagebox
 import os
 from Bio import SeqIO
 from Bio.Alphabet import generic_protein, generic_nucleotide
@@ -32,10 +32,6 @@ SEQUENCE_TYPE = {"Nucleotido": generic_nucleotide, "Proteina": generic_protein}
 
 
 class TypeSequenceException(Exception):
-    pass
-
-
-class SequenceAlignedException(object):
     pass
 
 
@@ -74,29 +70,25 @@ class Root(Tk):
             self.check_fasta()
             self.button.configure(text=os.path.basename(self.fileName))
             self.waitingLabel()
-            geolocation.dataset(self.fileName, alphabet=SEQUENCE_TYPE.get(self.typeSequence.get()),
+            geolocation.run(self.fileName, alphabet=SEQUENCE_TYPE.get(self.typeSequence.get()),
                                 bootstrap=self.bootstrap.get(), aligned=self.aligned)
-            # evolutionaryInference.fasta_to_tree(self.fileName) # TEST
             self.waitingLabel.config(text="Procesado con exito")
             self.update()
             threading.Thread(target=lambda: os.system('egfr-family.phy.log')).start()
             threading.Thread(target=lambda: plt.show()).run()
         except FileNotFoundError:
-            None
+            pass
+        except TypeSequenceException:
+            pass
         except Exception:
-            None
+            pass
 
     def check_fasta(self):
         self.aligned = False
         self.label = ttk.Label(self.labelFrameOpenFile, text='')
         self.label.grid(column=1, row=2)
         self.is_fasta()
-        try:
-            self.is_content_valid_fasta()
-        except SequenceAlignedException:
-            pass
-        except TypeSequenceException:
-            pass
+        self.is_content_valid_fasta()
 
     def is_fasta(self):
         with open(self.fileName, "r") as handle:
@@ -129,33 +121,46 @@ class Root(Tk):
                 seq = seq.replace("\n", "")
                 seq = seq.replace("\r", "")
                 seqs.append(seq)
-                if len(set(list(map(lambda sequence: len(sequence), seqs)))) == 1:
+                if self.is_aligned(seqs):
                     self.aligned = True
-                    if next(filter(lambda sequence: sequence.find('-'), seqs), None) is not None:
-                        msg = 'Secuencias alineadas, se salteara ese paso'
-                        self.label.configure(text=msg)
-                        raise SequenceAlignedException(msg)
+                    msg = 'Secuencias alineadas, se salteara ese paso'
+                    self.label.configure(text=msg)
                 if len(set(list(map(lambda sequence: len(list(set(sequence))), seqs)))) == 1:
                     for sequence in seqs:
                         seqDistinct = list(set(sequence))
                         seqDistinct.sort()
                         if seqDistinct == ['A', 'C', 'G', 'T'] or seqDistinct == ['A', 'C', 'G', 'U']:
                             if self.typeSequence.get().lower() != "nucleotido":
-                                msg = 'Ha especificado tipo de secuencia: '+self.typeSequence.get()+' y son secuencias de nucleotidos'
-                                print(msg)
-                                self.label.configure(text=msg)
-                                raise TypeSequenceException(msg)
+                                msg = 'Ha especificado tipo de secuencia: '+self.typeSequence.get()+' y son posibles secuencias de nucleotidos'
+                                if not messagebox.askyesno(message=msg+", ¿Desea continuar?", title="Advertencia"):
+                                    raise TypeSequenceException(msg)
+                                else:
+                                    break
+                        else:
+                            if self.typeSequence.get().lower() != 'proteina':
+                                msg = 'Ha especificado tipo de secuencia: ' + self.typeSequence.get() + ' y son posibles secuencias de proteinas'
+                                if not messagebox.askyesno(message=msg+", ¿Desea continuar?", title="Advertencia"):
+                                    raise TypeSequenceException(msg)
+                                else:
+                                    break
             else:
                 msg = 'El formato del contenido debe comenzar con > para cada header por secuencia'
                 self.label.configure(text=msg)
                 raise Exception(msg)
 
+    def is_aligned(self, seqs):
+        return len(set(list(map(lambda sequence: len(sequence), seqs)))) == 1 and next(filter(lambda sequence: sequence.find('-'), seqs), None) is not None
+
     def waitingLabel(self):
         self.waitingLabel = ttk.Label(self.labelFrameWaiting, text='')
+        self.infoWaitingLabel = ttk.Label(self.labelFrameWaiting, text='')
         self.labelFrameOpenFile.destroy()
         self.labelFrameBootstrap.destroy()
         self.labelFrameOptionMenu.destroy()
-        self.waitingLabel.grid(column=0, row=0)
+        if self.aligned:
+            self.infoWaitingLabel.grid(column=0, row=0)
+            self.infoWaitingLabel.config(text='Secuencias alineadas, se salteara ese paso. ')
+        self.waitingLabel.grid(column=1, row=0)
         self.waitingLabel.config(text="Procesando...")
         self.update()
 

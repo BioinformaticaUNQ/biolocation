@@ -1,11 +1,12 @@
 import os
-import subprocess
 from pathlib import Path
-from Bio import Entrez, AlignIO, Phylo
+from Bio import Entrez
 from Bio import SeqIO
+from Bio.Alphabet import generic_nucleotide
 from geopy.geocoders import Nominatim
 from ete3 import Tree, NodeStyle, TreeStyle
-from src.evolutionaryInference import clustalo
+
+from src import evolutionaryInference
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
@@ -28,12 +29,9 @@ def search_taxonID(table):
             element["GBQualifier_name"] == "db_xref" and element["GBQualifier_value"].split(":")[0] == 'taxon']
 
 
-def listIds(seq_record):
+def listIds(seq_record, db):
     variant = seq_record.id
     Entrez.email = 'grupo6@bioinformatica.com.ar'  # provide your email address
-    db = 'nucleotide'  # set search to dbVar database
-    # db = 'protein'
-    # db = 'pubmed'
     paramEutils = {'usehistory': 'Y', 'RetMax': '1'}  # Use Entrez search history to cache results
     # download list of GIs for the species
     print('downloading sequences for species organism:' + variant)
@@ -51,50 +49,22 @@ def listIds(seq_record):
     paramEutils['retmax'] = 5  # get next five results
     return res['IdList']
 
-
-def dataset(fileName, alphabet, bootstrap, aligned):
-    out_file = os.path.basename(fileName) + '-aligned.fasta'
-    clustalo.runClustalO("grupo6@bioinformatica.com", fileName, outfilename=out_file, fmt='clustal')
-    # aligned_file = open(out_file, 'r')
-    # align = AlignIO.read(aligned_file, "clustal")
-    # aligned_file.close()
-    AlignIO.convert(out_file, "clustal", "egfr-family.phy", "phylip-relaxed")
-    os.remove(out_file)
-    # calculator = DistanceCalculator('blastn')
-    # dm = calculator.get_distance(align)
-    # constructor = DistanceTreeConstructor()
-    # tree = constructor.nj(dm)
-    iqtree_exe = os.path.join(project_dir, 'resources/iqtree-1.6.12-Windows/bin/iqtree.exe')
-    # subprocess.run(
-    #    [iqtree_exe, "-s", "egfr-family.phy", "-m", "TIM3+R5", "-alrt", "1000", "-bo", "100", "-wbtl", "-nt", "AUTO",
-    #     "-redo"])
-    # subprocess.call(['iqtree','-s', file , '-bb', str(bootstrap)])
-    subprocess.run([iqtree_exe, '-s', "egfr-family.phy", '-bb', str(bootstrap)])
-    os.remove('egfr-family.phy')
-    # seqTree = open("egfr-family.phy.bionj", "r")
-    seqTree = open("egfr-family.phy.treefile", "r")
-    tree_phy = Tree(str(seqTree.readlines().__getitem__(0)))
-    seqTree.close()
-    os.remove("egfr-family.phy.bionj")
-    os.remove("egfr-family.phy.ckp.gz")
-    # os.remove("egfr-family.phy.boottrees")
-    os.remove("egfr-family.phy.mldist")
-    # os.remove("egfr-family.phy.treefile")
-    # Tree.convert_to_ultrametric(tree_phy)
-    # tree.rooted = True
-    # tree_phy = tree.as_phyloxml()
-    # tree_phy = Phylogeny.from_tree(tree_phy)
-    # tree_phy.root.color = (128, 128, 128)
+# Genbank con datos de countries sino no anda
+def run(fileName, alphabet, bootstrap, aligned):
+    db = 'protein' # set search to dbVar database
+    if alphabet == generic_nucleotide:
+        db = 'nucleotide'
+    tree_phy = evolutionaryInference.fasta_to_tree(fileName, aligned, bootstrap)
 
     # location
     countriesByGenbank = {}
     for seq_record in SeqIO.parse(fileName, "fasta"):
-        list_of_ids = listIds(seq_record)
+        list_of_ids = listIds(seq_record, db)
         if len(list_of_ids) > 0:
             Entrez.email = "grupo6@bioinformatica.com.ar"
             ### read entry in xml and extract features..
             # use Entrez.efetch to read data in .xml format
-            handle = Entrez.efetch(db="nucleotide", id=list_of_ids, retmode="xml")
+            handle = Entrez.efetch(db=db, id=list_of_ids, retmode="xml")
             record = Entrez.read(handle, validate=False)
             # reset lists for values to be stored
             countries = []
@@ -138,23 +108,21 @@ def dataset(fileName, alphabet, bootstrap, aligned):
 def draw(countriesByGenbank, tree_phy):
     geo = Nominatim(user_agent='BioLocation', timeout=2)
     plt.figure(figsize=(16, 12))
-    # fig, ax = plt.subplots()
-    myMap = Basemap(projection='robin', lon_0=0, lat_0=0)  # ax=ax
+    myMap = Basemap(projection='robin', lon_0=0, lat_0=0)
     labels = []
     location = []
     for (key, value) in countriesByGenbank.items():
-        place = geo.geocode(value)
-        x, y = myMap(place.longitude, place.latitude)
+        temp_location = ('NA', 'NA')
+        if value != 'NA':
+            place = geo.geocode(value)
+            x, y = myMap(place.longitude, place.latitude)
+            temp_location = (x, y)
         labels.append(key)
-        location.append((x, y))
+        location.append(temp_location)
     myMap.drawcoastlines()
     myMap.drawcountries()
     myMap.fillcontinents(color='white')
     myMap.drawmapboundary(fill_color='aqua')
-    # myMap.bluemarble()
-    # ax.text(x, y, 'label', ha='center', size=20)
-    # myMap.plot(x, y, color='g', marker='o', markersize='15')
-    # ax.scatter(x, y)
 
     longitudes = []
     latitudes = []
@@ -167,29 +135,15 @@ def draw(countriesByGenbank, tree_phy):
     for label, xpt, ypt, color in zip(labels, iter(longitudes), iter(latitudes), colors):
         if colorsInMap.get((xpt, ypt)):
             colorsInMap.get((xpt, ypt)).append(color)
-            myMap.plot(xpt, ypt, marker='o', markerfacecolor=color, markersize=str(markersize-len(colorsInMap.get((xpt, ypt)))-5))
+            if xpt != 'NA':
+                myMap.plot(xpt, ypt, marker='o', markerfacecolor=color, markersize=str(markersize-len(colorsInMap.get((xpt, ypt)))-5))
         else:
-            colorsInMap[(xpt, ypt)] = [color]
-            myMap.plot(xpt, ypt, marker='o', markerfacecolor=color, markersize=str(markersize))
-        # mrca = tree_phy.common_ancestor({"name": label})
-        # mrca.branch_length = mrca.branch_length + 0.1
-        # mrca.color = color.split(':')[1]
+            if xpt != 'NA':
+                colorsInMap[(xpt, ypt)] = [color]
+                myMap.plot(xpt, ypt, marker='o', markerfacecolor=color, markersize=str(markersize))
         nstyle = NodeStyle()
         nstyle["fgcolor"] = color.split(':')[1]
         tree_phy.get_leaves_by_name(label)[0].set_style(nstyle)
-    # X = itertools.repeat(float(x), 1)
-    # Y = itertools.repeat(float(y), 1)
-    # for label, xpt, ypt in zip(labels, X, Y):
-    #    plt.text(xpt, ypt, label)
-
-    # for i, (newX, newY) in enumerate(zip(X, Y), start=1):
-    #    ax.annotate(city, (newX, newY), xytext=(5, 5), textcoords='offset points', color='g')
-    '''for p in place_list:
-        place = geo.geocode(city, timeout=2)
-        time.sleep(0.5)
-        x, y = myMap(p.longitude, p.latitude)
-        myMap.plot(x, y, color='g', marker='o', markersize='15')'''
-    # Phylo.draw(tree_phy)
     ts = TreeStyle()
     ts.show_branch_support = True
     tree_phy.render("mytree.png", tree_style=ts)
