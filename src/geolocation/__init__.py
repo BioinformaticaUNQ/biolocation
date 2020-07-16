@@ -50,16 +50,22 @@ def listIds(seq_record, db):
     return res['IdList']
 
 # Genbank con datos de countries sino no anda
-def run(fileName, alphabet, bootstrap, aligned):
+def run(fileName, alphabet, bootstrap, aligned, quantitySequences):
     db = 'protein' # set search to dbVar database
     if alphabet == generic_nucleotide:
         db = 'nucleotide'
-    tree_phy = evolutionaryInference.fasta_to_tree(fileName, aligned, bootstrap)
+    print("db")
+    print(db)
+    tree_phy = evolutionaryInference.fasta_to_tree(fileName, aligned, bootstrap, quantitySequences)
+    print("tree_phy")
+    print(tree_phy)
 
     # location
     countriesByGenbank = {}
     for seq_record in SeqIO.parse(fileName, "fasta"):
         list_of_ids = listIds(seq_record, db)
+        print("list_of_ids")
+        print(list_of_ids)
         if len(list_of_ids) > 0:
             Entrez.email = "grupo6@bioinformatica.com.ar"
             ### read entry in xml and extract features..
@@ -78,6 +84,8 @@ def run(fileName, alphabet, bootstrap, aligned):
             # create temporary objects to collect values of the fields of interest.. note that we run a loop through 'sourcetab'.. It is probably not necessary, since there should be only one 'source' section.. but we do it this way because the 'gene' sections will be often multiple..
             temp_countries = []
             temp_lat_lons = []
+            print("sourcetab")
+            print(sourcetab)
             if len(sourcetab) > 0:
                 for j in range(len(sourcetab)):
                     # store country information
@@ -99,13 +107,19 @@ def run(fileName, alphabet, bootstrap, aligned):
             else:
                 countries.append('NA')
                 lat_lons.append('NA')
+            print("lat_lons")
+            print(lat_lons)
             print('country')
             print(countries)
         countriesByGenbank[seq_record.id] = countries[0]
+        print("countriesByGenbank")
+        print(countriesByGenbank)
     draw(countriesByGenbank, tree_phy)
 
 
 def draw(countriesByGenbank, tree_phy):
+    print("countriesByGenbank")
+    print(countriesByGenbank)
     geo = Nominatim(user_agent='BioLocation', timeout=2)
     plt.figure(figsize=(16, 12))
     myMap = Basemap(projection='robin', lon_0=0, lat_0=0)

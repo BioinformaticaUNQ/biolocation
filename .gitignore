@@ -2,19 +2,22 @@
 
 auxiliar/
 
-src/*.phy
-src/*.txt
-src/*.bionj
-src/*.gz
-src/*.iqtree
-src/*.log
-src/*.mldist
-src/*.treefile
-src/*.xml
-src/*.boottrees
-src/*mytree.png
-src/*.nex
-src/*.contree
+# IQTree
+*.fasta
+*.phy
+*.txt
+*.bionj
+*.gz
+*.iqtree
+*.log
+*.mldist
+*.treefile
+*.xml
+*.boottrees
+*.mytree.png
+*.nex
+*.contree
+IQtree_results*/
 
 # Created by .ignore support plugin (hsz.mobi)
 ### Python template

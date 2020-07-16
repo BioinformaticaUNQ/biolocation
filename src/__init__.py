@@ -30,6 +30,9 @@ import matplotlib.pyplot as plt
 
 SEQUENCE_TYPE = {"Nucleotido": generic_nucleotide, "Proteina": generic_protein}
 
+SEQUENCES_LIMIT = 7
+
+SEQUENCES_MIN = 3
 
 class TypeSequenceException(Exception):
     pass
@@ -71,7 +74,7 @@ class Root(Tk):
             self.button.configure(text=os.path.basename(self.fileName))
             self.waitingLabel()
             geolocation.run(self.fileName, alphabet=SEQUENCE_TYPE.get(self.typeSequence.get()),
-                                bootstrap=self.bootstrap.get(), aligned=self.aligned)
+                                bootstrap=self.bootstrap.get(), aligned=self.aligned, quantitySequences=self.quantitySequences)
             self.waitingLabel.config(text="Procesado con exito")
             self.update()
             threading.Thread(target=lambda: os.system('egfr-family.phy.log')).start()
@@ -121,10 +124,18 @@ class Root(Tk):
                 seq = seq.replace("\n", "")
                 seq = seq.replace("\r", "")
                 seqs.append(seq)
+                self.quantitySequences = len(seqs)
+                if self.quantitySequences < SEQUENCES_MIN:
+                    msg = 'Un mínimo de 3 secuencias es requerido'
+                    self.label.configure(text=msg)
+                    raise Exception(msg)
+                msg = ''
+                if self.quantitySequences == SEQUENCES_MIN:
+                    msg = 'Al ser 3 secuencias no se utilizará bootstrap.'
                 if self.is_aligned(seqs):
                     self.aligned = True
-                    msg = 'Secuencias alineadas, se salteara ese paso'
-                    self.label.configure(text=msg)
+                    msg = msg + ' Secuencias alineadas, se salteara ese paso'
+                self.label.configure(text=msg)
                 if len(set(list(map(lambda sequence: len(list(set(sequence))), seqs)))) == 1:
                     for sequence in seqs:
                         seqDistinct = list(set(sequence))
@@ -149,7 +160,7 @@ class Root(Tk):
                 raise Exception(msg)
 
     def is_aligned(self, seqs):
-        return len(set(list(map(lambda sequence: len(sequence), seqs)))) == 1 and next(filter(lambda sequence: sequence.find('-'), seqs), None) is not None
+        return len(set(list(map(lambda sequence: len(sequence), seqs)))) == 1 and next(filter(lambda sequence: '-' in sequence, seqs), None) is not None
 
     def waitingLabel(self):
         self.waitingLabel = ttk.Label(self.labelFrameWaiting, text='')
@@ -157,9 +168,14 @@ class Root(Tk):
         self.labelFrameOpenFile.destroy()
         self.labelFrameBootstrap.destroy()
         self.labelFrameOptionMenu.destroy()
+        msg = ''
         if self.aligned:
-            self.infoWaitingLabel.grid(column=0, row=0)
-            self.infoWaitingLabel.config(text='Secuencias alineadas, se salteara ese paso. ')
+            msg = 'Secuencias alineadas, se salteara ese paso.'
+        if self.quantitySequences == SEQUENCES_MIN:
+            msg = msg + ' Al ser 3 secuencias no se utilizará bootstrap.'
+            # print(self.quantitySequences == SEQUENCES_MIN)
+        self.infoWaitingLabel.grid(column=0, row=0)
+        self.infoWaitingLabel.config(text=msg)
         self.waitingLabel.grid(column=1, row=0)
         self.waitingLabel.config(text="Procesando...")
         self.update()
