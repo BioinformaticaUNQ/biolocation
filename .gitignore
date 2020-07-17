@@ -3,7 +3,6 @@
 auxiliar/
 
 # IQTree
-*.fasta
 *.phy
 *.txt
 *.bionj
