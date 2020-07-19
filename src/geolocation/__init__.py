@@ -24,11 +24,6 @@ def search_features(name, key, table):
     return [element for element in table if element[key] == name]
 
 
-def search_taxonID(table):
-    return [element for element in table if
-            element["GBQualifier_name"] == "db_xref" and element["GBQualifier_value"].split(":")[0] == 'taxon']
-
-
 def listIds(seq_record, db):
     variant = seq_record.id
     Entrez.email = 'grupo6@bioinformatica.com.ar'  # provide your email address
@@ -39,6 +34,7 @@ def listIds(seq_record, db):
     eSearch = Entrez.esearch(db=db, term='("' + variant + '"[Accession])', **paramEutils)
     # get eSearch result as dict object
     res = Entrez.read(eSearch)
+    eSearch.close()
     # take a peek of what's in the result (ie. WebEnv, Count, etc.)
     for k in res:
         print(k, "=", res[k])
@@ -49,23 +45,17 @@ def listIds(seq_record, db):
     paramEutils['retmax'] = 5  # get next five results
     return res['IdList']
 
-# Genbank con datos de countries sino no anda
+
 def run(fileName, alphabet, bootstrap, aligned, quantitySequences):
-    db = 'protein' # set search to dbVar database
+    db = 'protein'  # set search to dbVar database
     if alphabet == generic_nucleotide:
         db = 'nucleotide'
-    print("db")
-    print(db)
     tree_phy = evolutionaryInference.fasta_to_tree(fileName, aligned, bootstrap, quantitySequences)
-    print("tree_phy")
-    print(tree_phy)
 
     # location
     countriesByGenbank = {}
     for seq_record in SeqIO.parse(fileName, "fasta"):
         list_of_ids = listIds(seq_record, db)
-        print("list_of_ids")
-        print(list_of_ids)
         if len(list_of_ids) > 0:
             Entrez.email = "grupo6@bioinformatica.com.ar"
             ### read entry in xml and extract features..
@@ -79,9 +69,6 @@ def run(fileName, alphabet, bootstrap, aligned, quantitySequences):
             refs = record[0]['GBSeq_references']
             # get and name the 'source' section (s)
             sourcetab = search_features('source', 'GBFeature_key', feattab)
-            # output.write(record[i]['GBSeq_primary-accession'] + ": " + str(len(sourcetab))+ "\n") # this was just a check!
-
-            # create temporary objects to collect values of the fields of interest.. note that we run a loop through 'sourcetab'.. It is probably not necessary, since there should be only one 'source' section.. but we do it this way because the 'gene' sections will be often multiple..
             temp_countries = []
             temp_lat_lons = []
             print("sourcetab")
@@ -92,14 +79,14 @@ def run(fileName, alphabet, bootstrap, aligned, quantitySequences):
                     if len(search_features('country', 'GBQualifier_name', sourcetab[j]['GBFeature_quals'])) > 0:
                         temp_countries.append(
                             search_features('country', 'GBQualifier_name', sourcetab[j]['GBFeature_quals'])[0][
-                                'GBQualifier_value'])  # we assume that there is only one field 'organism' per each source field..
+                                'GBQualifier_value'])
                     else:
                         temp_countries.append('NA')
                     # store latitude and longitude
                     if len(search_features('lat_lon', 'GBQualifier_name', sourcetab[j]['GBFeature_quals'])) > 0:
                         temp_lat_lons.append(
                             search_features('lat_lon', 'GBQualifier_name', sourcetab[j]['GBFeature_quals'])[0][
-                                'GBQualifier_value'])  # we assume that there is only one field 'lat_lon' per each source field..
+                                'GBQualifier_value'])
                     else:
                         temp_lat_lons.append('NA')
                 countries.append(','.join(temp_countries))
@@ -107,21 +94,13 @@ def run(fileName, alphabet, bootstrap, aligned, quantitySequences):
             else:
                 countries.append('NA')
                 lat_lons.append('NA')
-            print("lat_lons")
-            print(lat_lons)
-            print('country')
-            print(countries)
-        countriesByGenbank[seq_record.id] = countries[0]
-        print("countriesByGenbank")
-        print(countriesByGenbank)
+            countriesByGenbank[seq_record.id] = countries[0]
     draw(countriesByGenbank, tree_phy)
 
 
 def draw(countriesByGenbank, tree_phy):
-    print("countriesByGenbank")
-    print(countriesByGenbank)
     geo = Nominatim(user_agent='BioLocation', timeout=2)
-    plt.figure(figsize=(16, 12))
+    plt.figure(figsize=(13, 12))
     myMap = Basemap(projection='robin', lon_0=0, lat_0=0)
     labels = []
     location = []
@@ -150,7 +129,8 @@ def draw(countriesByGenbank, tree_phy):
         if colorsInMap.get((xpt, ypt)):
             colorsInMap.get((xpt, ypt)).append(color)
             if xpt != 'NA':
-                myMap.plot(xpt, ypt, marker='o', markerfacecolor=color, markersize=str(markersize-len(colorsInMap.get((xpt, ypt)))-5))
+                myMap.plot(xpt, ypt, marker='o', markerfacecolor=color,
+                           markersize=str(markersize - len(colorsInMap.get((xpt, ypt))) - 5))
         else:
             if xpt != 'NA':
                 colorsInMap[(xpt, ypt)] = [color]
@@ -158,15 +138,17 @@ def draw(countriesByGenbank, tree_phy):
         nstyle = NodeStyle()
         nstyle["fgcolor"] = color.split(':')[1]
         tree_phy.get_leaves_by_name(label)[0].set_style(nstyle)
+    plt.annotate('Nodos no ancestrales', xy=(0, 0), xycoords='axes fraction')
     ts = TreeStyle()
     ts.show_branch_support = True
-    tree_phy.render("mytree.png", tree_style=ts)
+    tree_phy.get_tree_root().render("mytree.png", tree_style=ts)
     fig = plt.figure()
     img = mpimg.imread('mytree.png')
     imgplot = plt.imshow(img)
-    os.remove('mytree.png')
     os.remove('egfr-family.phy.iqtree')
     os.remove('egfr-family.phy.contree')
     os.remove('egfr-family.phy.model.gz')
     os.remove('egfr-family.phy.splits.nex')
-    os.remove('egfr-family.phy.treefile')
+    os.remove("egfr-family.phy.bionj")
+    os.remove("egfr-family.phy.ckp.gz")
+    os.remove("egfr-family.phy.mldist")
