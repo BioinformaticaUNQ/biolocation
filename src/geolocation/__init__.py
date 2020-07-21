@@ -48,16 +48,19 @@ def listIds(seq_record, db):
 
 
 def run(fileName, alphabet, bootstrap, aligned, quantitySequences):
-    a_file = open("data.pkl", "rb")
-    countriesByGenbank = pickle.load(a_file)
+    '''
+    # If exists countriesByGenbank.pkl
+    countriesByGenbank_file = open("countriesByGenbank.pkl", "rb")
+    countriesByGenbank = pickle.load(countriesByGenbank_file)
     print(countriesByGenbank)
     draw(countriesByGenbank)
-    a_file.close()
+    countriesByGenbank_file.close()
     '''
+
     db = 'protein'  # set search to dbVar database
     if alphabet == generic_nucleotide:
         db = 'nucleotide'
-    # tree_phy = evolutionaryInference.fasta_to_tree(fileName, aligned, bootstrap, quantitySequences)
+    tree_phy = evolutionaryInference.fasta_to_tree(fileName, aligned, bootstrap, quantitySequences)
 
     # location
     countriesByGenbank = {}
@@ -102,16 +105,70 @@ def run(fileName, alphabet, bootstrap, aligned, quantitySequences):
                 countries.append('NA')
                 lat_lons.append('NA')
             countriesByGenbank[seq_record.id] = countries[0]
-    draw(countriesByGenbank) # tree_phy
-    '''
+    draw(countriesByGenbank, tree_phy)
+    # draw(countriesByGenbank)
 
+def draw(countriesByGenbank, tree_phy):
+    geo = Nominatim(user_agent='BioLocation', timeout=2)
+    plt.figure(figsize=(13, 12))
+    myMap = Basemap(projection='robin', lon_0=0, lat_0=0)
+    labels = []
+    location = []
+    for (key, value) in countriesByGenbank.items():
+        temp_location = ('NA', 'NA')
+        if value != 'NA':
+            place = geo.geocode(value.split(':')[0])
+            x, y = myMap(place.longitude, place.latitude)
+            temp_location = (x, y)
+        labels.append(key)
+        location.append(temp_location)
+    myMap.drawcoastlines()
+    myMap.drawcountries()
+    myMap.fillcontinents(color='white')
+    myMap.drawmapboundary(fill_color='aqua')
+
+    longitudes = []
+    latitudes = []
+    for longitude, latitude in location:
+        longitudes.append(longitude)
+        latitudes.append(latitude)
+    colors = list(mcolors.TABLEAU_COLORS)
+    colorsInMap = {}
+    markersize = 15
+    for label, xpt, ypt, color in zip(labels, iter(longitudes), iter(latitudes), colors):
+        if colorsInMap.get((xpt, ypt)):
+            colorsInMap.get((xpt, ypt)).append(color)
+            if xpt != 'NA':
+                myMap.plot(xpt, ypt, marker='o', markerfacecolor=color,
+                           markersize=str(markersize - len(colorsInMap.get((xpt, ypt)))-1 ))
+        else:
+            if xpt != 'NA':
+                print(xpt)
+                colorsInMap[(xpt, ypt)] = [color]
+                myMap.plot(xpt, ypt, marker='o', markerfacecolor=color, markersize=str(markersize))
+        nstyle = NodeStyle()
+        nstyle["fgcolor"] = color.split(':')[1]
+        tree_phy.get_leaves_by_name(label)[0].set_style(nstyle)
+    plt.annotate('Nodos no ancestrales', xy=(0, 0), xycoords='axes fraction')
+    ts = TreeStyle()
+    ts.show_branch_support = True
+    tree_phy.get_tree_root().render("mytree.png", tree_style=ts)
+    fig = plt.figure()
+    img = mpimg.imread('mytree.png')
+    imgplot = plt.imshow(img)
+    os.remove('egfr-family.phy.iqtree')
+    os.remove('egfr-family.phy.contree')
+    os.remove('egfr-family.phy.model.gz')
+    os.remove('egfr-family.phy.splits.nex')
+    os.remove("egfr-family.phy.bionj")
+    os.remove("egfr-family.phy.ckp.gz")
+    os.remove("egfr-family.phy.mldist")
+
+'''
 def draw(countriesByGenbank): # tree_phy
-    # a_file = open("data.pkl", "wb")
-    # pickle.dump(countriesByGenbank, a_file)
-    # a_file.close()
-    # f = open("countriesByGenbank.txt", "w")
-    # f.write(str(countriesByGenbank))
-    # f.close()
+    # countriesByGenbank_file = open("countriesByGenbank.pkl", "wb")
+    # pickle.dump(countriesByGenbank, countriesByGenbank_file)
+    # countriesByGenbank_file.close()
     geo = Nominatim(user_agent='BioLocation', timeout=2)
     plt.figure(figsize=(13, 12))
     myMap = Basemap(projection='robin', lon_0=0, lat_0=0)
@@ -147,21 +204,4 @@ def draw(countriesByGenbank): # tree_phy
         else:
             if xpt != 'NA':
                 colorsInMap[(xpt, ypt)] = [color]
-                myMap.plot(xpt, ypt, marker='o', markerfacecolor=color, markersize=str(markersize))
-        # nstyle = NodeStyle()
-        # nstyle["fgcolor"] = color.split(':')[1]
-        # tree_phy.get_leaves_by_name(label)[0].set_style(nstyle)
-    # plt.annotate('Nodos no ancestrales', xy=(0, 0), xycoords='axes fraction')
-    # ts = TreeStyle()
-    # ts.show_branch_support = True
-    # tree_phy.get_tree_root().render("mytree.png", tree_style=ts)
-    # fig = plt.figure()
-    # img = mpimg.imread('mytree.png')
-    # imgplot = plt.imshow(img)
-    # os.remove('egfr-family.phy.iqtree')
-    # os.remove('egfr-family.phy.contree')
-    # os.remove('egfr-family.phy.model.gz')
-    # os.remove('egfr-family.phy.splits.nex')
-    # os.remove("egfr-family.phy.bionj")
-    # os.remove("egfr-family.phy.ckp.gz")
-    # os.remove("egfr-family.phy.mldist")
+                myMap.plot(xpt, ypt, marker='o', markerfacecolor=color, markersize=str(markersize))'''

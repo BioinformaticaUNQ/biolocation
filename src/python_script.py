@@ -1,4 +1,5 @@
-
+import shutil
+import subprocess
 import threading
 from importlib import reload
 from pathlib import Path
@@ -31,7 +32,7 @@ class Root(Tk):
         self.title('Biolocalizacion')
         self.minsize(500, 200)
         ico = os.path.join(PROJECT_DIR, 'resources/favicon.ico')
-        self.wm_iconbitmap(ico)
+        # self.wm_iconbitmap(ico)
         self.labelFrameWaiting = ttk.LabelFrame(self, text='')
         self.labelFrameWaiting.grid(column=0, row=1, padx=30, pady=10)
         self.createLabel()
@@ -61,7 +62,7 @@ class Root(Tk):
 
     def fileDialog(self):
         self.fileName = filedialog.askopenfilename(initialdir='/', title='Seleccionar archivo',
-                                                   filetype=(('fasta', '*.fasta'), ('All Files', '*.*')))
+                                                   filetypes=(('fasta', '*.fasta'), ('All Files', '*.*')))
         try:
             self.check_fasta()
             self.button.configure(text=os.path.basename(self.fileName))
@@ -71,7 +72,8 @@ class Root(Tk):
                             quantitySequences=self.quantitySequences)
             self.waitingLabel.config(text='Procesado con exito')
             self.update()
-            threading.Thread(target=lambda: os.system('egfr-family.phy.log')).start()
+            # threading.Thread(target=lambda: os.system('egfr-family.phy.log')).start()
+            threading.Thread(target=lambda: subprocess.run(["xdg-open", 'egfr-family.phy.log'], check=True)).start()
             threading.Thread(target=lambda: plt.show()).run()
             self._update()
         except FileNotFoundError:
