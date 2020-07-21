@@ -16,8 +16,8 @@ def fasta_to_tree(filename, aligned, bootstrap, quantitySequences):
     if not aligned:
         out_file = nameFile + '-aligned.fasta'
         clustalo.runClustalO("grupo6@bioinformatica.com", filename, outfilename=out_file, fmt='clustal')
-    iqtree_exe = os.path.join(project_dir, 'resources/iqtree-1.6.12-Linux/bin/iqtree')
-    # iqtree_exe = os.path.join(project_dir, 'resources/iqtree-1.6.12-Windows/bin/iqtree.exe')
+    # iqtree_exe = os.path.join(project_dir, 'resources/iqtree-1.6.12-Linux/bin/iqtree')
+    iqtree_exe = os.path.join(project_dir, 'resources/iqtree-1.6.12-Windows/bin/iqtree.exe')
     dirName = 'IQtree_results-' + nameFile
     cwd = os.getcwd()
     try:

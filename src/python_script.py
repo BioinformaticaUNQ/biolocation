@@ -62,7 +62,7 @@ class Root(Tk):
 
     def fileDialog(self):
         self.fileName = filedialog.askopenfilename(initialdir='/', title='Seleccionar archivo',
-                                                   filetypes=(('fasta', '*.fasta'), ('All Files', '*.*')))
+                                                   filetype=(('fasta', '*.fasta'), ('All Files', '*.*')))
         try:
             self.check_fasta()
             self.button.configure(text=os.path.basename(self.fileName))
@@ -72,8 +72,8 @@ class Root(Tk):
                             quantitySequences=self.quantitySequences)
             self.waitingLabel.config(text='Procesado con exito')
             self.update()
-            # threading.Thread(target=lambda: os.system('egfr-family.phy.log')).start()
-            threading.Thread(target=lambda: subprocess.run(["xdg-open", 'egfr-family.phy.log'], check=True)).start()
+            threading.Thread(target=lambda: os.system('egfr-family.phy.log')).start()
+            # threading.Thread(target=lambda: subprocess.run(["xdg-open", 'egfr-family.phy.log'], check=True)).start()
             threading.Thread(target=lambda: plt.show()).run()
             self._update()
         except FileNotFoundError:
