@@ -150,6 +150,7 @@ def draw(countriesByGenbank, tree_phy):
         nstyle["fgcolor"] = color.split(':')[1]
         tree_phy.get_leaves_by_name(label)[0].set_style(nstyle)
     plt.annotate('Nodos no ancestrales', xy=(0, 0), xycoords='axes fraction')
+    plt.savefig('myMap.png')
     ts = TreeStyle()
     ts.show_branch_support = True
     tree_phy.get_tree_root().render("mytree.png", tree_style=ts)
