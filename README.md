@@ -1,4 +1,4 @@
-# bioinformatica
+# Bioinformática
 
 ## Introducción
 Este programa está realizado en Python. Su función es graficar árboles filogénicos mediante archivos fastas de nucleotidos o de proteínas. Si el archivo no se encuentra alineado, se alineará y se guardará el archivo alineado para su próxima utilización. Además,se cuenta con un mapa que nos ubica las secuencias, dependiendo si poseen un país de origen.
@@ -43,7 +43,7 @@ https://stackoverflow.com/questions/434597/open-document-with-default-os-applica
 Al correr el proyecto en el ide utilizado, nos aparecerá una pequeña ventana en la cuál, podremos visualizar dos selectores al costado del botón para subir un archivo. El primero es para elegir el tipo de secuencia a utilizar (estas podrán ser nucleotidos o proteínas), el segundo es para elejir el Bootstrap que se querra utilizar para graficar.
  El tipo de archivo admitido es fasta, el cuál debe respetar el formato universalmente utilizado y deberá tener al mínimo 8 y como máximo 300 secuencias
 
-![bioIf3](https://user-images.githubusercontent.com/31372437/88123394-2fc78700-cba1-11ea-8c0c-5fcf26a9a80d.jpg)
+![bioIf3 (1)](https://user-images.githubusercontent.com/31372437/88124537-be3d0800-cba3-11ea-9319-c5dda01de6cc.jpg)
  
  En el caso de elegir el tipo incorrecto de secuencia, nos aparecerá una advertencia la cuál nos indicará el error y con podrémos decidir si deseamos continuar o no (al seleccionar el dato erroneo no perderemos funcionalidad )
  
@@ -51,7 +51,8 @@ Al correr el proyecto en el ide utilizado, nos aparecerá una pequeña ventana e
  
  Tambíen se generaran en el proyecto los archivos correspondientes a la alineacion, el log del arbol y la imagen en formato ".png" del mapa.
  
- ![bioIf2](https://user-images.githubusercontent.com/31372437/88123437-47067480-cba1-11ea-9696-5da6dac84f78.jpg)
+![bioIf2 (1)](https://user-images.githubusercontent.com/31372437/88124471-9d74b280-cba3-11ea-884d-18ff7a9dcee0.jpg)
+
  
  **Observación:** Si las secuencias ingresadas no poseen país de origen dentro  de los registros de Entrez, no se mostrarán en el mapa.
  
@@ -62,13 +63,13 @@ Al correr el proyecto en el ide utilizado, nos aparecerá una pequeña ventana e
 
  **Observación:** Los colores de los nodos no ancestrales coinciden con los puntos en el mapa para su identificación.
   
-![bioIn](https://user-images.githubusercontent.com/31372437/88123572-87fe8900-cba1-11ea-97be-9b910d588cbc.jpg)
+![bioIn (1)](https://user-images.githubusercontent.com/31372437/88124418-761de580-cba3-11ea-8fbe-d914f7817dc5.jpg)
  
  ## Interacción con el árbol:
 
-![archivo100](https://user-images.githubusercontent.com/31372437/88123672-c6944380-cba1-11ea-8d49-9c2fb45d2c8b.jpg)
+![archivo100 (1)](https://user-images.githubusercontent.com/31372437/88124751-34416f00-cba4-11ea-84a0-46a09ef89ded.jpg)
 
  En el caso de contar con muchas secuencias, el no se podrá visualizar de manera óptima las partes que componen al árbol. Por lo cuál, será necesario hacerle zoom. La utilización de la herramienta zoom no es trivial, ya que primero se debe seleccionar con el cursor la parte que se quiere visualizar y luego tocar el icono correspondiente. 
  
-![mapa2de100](https://user-images.githubusercontent.com/31372437/88123712-dca20400-cba1-11ea-98f4-6ce43569eb9f.jpg)
-![mapa100de3](https://user-images.githubusercontent.com/31372437/88123714-ddd33100-cba1-11ea-84d8-5f5b23750566.jpg)
+![mapa2de100 (1)](https://user-images.githubusercontent.com/31372437/88124613-eb89b600-cba3-11ea-902d-09ef9f4296ec.jpg)
+![mapa100de3 (1)](https://user-images.githubusercontent.com/31372437/88124680-0eb46580-cba4-11ea-928a-eab4c68ca73c.jpg)
