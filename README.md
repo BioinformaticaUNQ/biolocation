@@ -49,9 +49,11 @@ Al correr el proyecto en el ide utilizado, nos aparecerá una pequeña ventana e
  
  El proceso puede tardar unos minutos (todo depende de la cantidad de secuencias ingresadas y del hardware de nuestra PC), mientras se va ejecutando se podrá visualizar en la consola la ejecución.
  
- Tambíen se generaran en el proyecto los archivos correspondientes a la alineacion y el log del arbol.
+ Tambíen se generaran en el proyecto los archivos correspondientes a la alineacion, el log del arbol y la imagen en formato ".png" del mapa.
  
  ![bioIf2](https://user-images.githubusercontent.com/31372437/88123437-47067480-cba1-11ea-9696-5da6dac84f78.jpg)
+ 
+ **Observación:** Si las secuencias ingresadas no poseen país de origen dentro  de los registros de Entrez, no se mostrarán en el mapa.
  
  Finalizado el proceso, contaremos con 3 ventanas abiertas:
     - El log del IQTree
