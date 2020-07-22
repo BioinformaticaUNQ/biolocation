@@ -4,7 +4,7 @@
 Este programa está realizado en Python. Su función es graficar árboles filogénicos mediante archivos fastas de nucleotidos o de proteínas. Si el archivo no se encuentra alineado, se alineará y se guardará el archivo alineado para su próxima utilización. Además,se cuenta con un mapa que nos ubica las secuencias, dependiendo si poseen un país de origen.
 
 ## Instalación y dependecias
-###Linux:
+### Linux:
 ```
 wget https://repo.anaconda.com/archive/Anaconda3-5.3.1-Linux-x86_64.sh
 bash Anaconda-5.3.1-Linux-x86_64.sh
@@ -34,7 +34,7 @@ Para intercalar entre windows y linux:
 https://stackoverflow.com/questions/434597/open-document-with-default-os-application-in-python-both-in-windows-and-mac-os
 
  
- ** Observación: ** La libreria "et3" puede traer conflicto a la hora de utilizarse, el cual podría resolverse de las siguientes maneras:
+ **Observación:** La libreria "et3" puede traer conflicto a la hora de utilizarse, el cual podría resolverse de las siguientes maneras:
     - Instalar/actualizar la versión de matplot
     - Realizar la instalación mediante la consola de Anaconda con el comando ```conda install -c etetooltikit et3```.
     
@@ -54,15 +54,15 @@ Al correr el proyecto en el ide utilizado, nos aparecerá una pequeña ventana e
  ![bioIf2](https://user-images.githubusercontent.com/31372437/88123437-47067480-cba1-11ea-9696-5da6dac84f78.jpg)
  
  Finalizado el proceso, contaremos con 3 ventanas abiertas:
-    1. El log de ...
-    2. El árbol filogénico
-    3. El mapa con las secuencias
+    - El log del IQTree
+    - El árbol filogénico
+    - El mapa con las secuencias
 
- ** Observación: **Los colores de los nodos no ancestrales coinciden con los puntos en el mapa para su identificación.
+ **Observación:** Los colores de los nodos no ancestrales coinciden con los puntos en el mapa para su identificación.
   
 ![bioIn](https://user-images.githubusercontent.com/31372437/88123572-87fe8900-cba1-11ea-97be-9b910d588cbc.jpg)
  
- ##Interacción con el árbol:
+ ## Interacción con el árbol:
 
 ![archivo100](https://user-images.githubusercontent.com/31372437/88123672-c6944380-cba1-11ea-8d49-9c2fb45d2c8b.jpg)
 
