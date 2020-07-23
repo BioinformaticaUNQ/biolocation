@@ -10,7 +10,7 @@ from Bio import SeqIO
 from Bio.Alphabet import generic_protein, generic_nucleotide
 from src import geolocation
 import matplotlib.pyplot as plt
-from src import python_script
+import python_script
 
 PROJECT_DIR = Path(__file__).parent.parent
 
