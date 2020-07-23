@@ -1,23 +1,20 @@
 # Biolocalización
 
 ## Introducción
-Este programa está realizado en Python. Su función es graficar árboles filogénicos mediante archivos fastas de nucleotidos o de proteínas. Si el archivo no se encuentra alineado, se alineará y se guardará el archivo alineado para su próxima utilización. Además,se cuenta con un mapa que nos ubica las secuencias, dependiendo si poseen un país de origen.
+Este programa está realizado en Python. Su función es graficar árboles filogénicos mediante archivos fastas de nucleotidos o de proteínas con formato de cabecera por secuencia: '>nroGenank' (signo mayor + número Genbank). En la carpeta 'resources' hay ejemplos de archivos. Si el archivo no se encuentra alineado, se alineará y se guardará el archivo alineado para su próxima utilización. Además,se cuenta con un mapa que nos ubica las secuencias, dependiendo si poseen un país de origen.
 
 ## Requisitos previos
 ```
 Anaconda por ejemplo wget https://repo.anaconda.com/archive/Anaconda3-5.3.1-Linux-x86_64.sh
 bash Anaconda-5.3.1-Linux-x86_64.sh
-Fix instalación anaconda https://www.youtube.com/watch?v=DY0DB_NwEu0:
+Fix instalación anaconda en Linux https://www.youtube.com/watch?v=DY0DB_NwEu0:
  -gedit .bashrc
  -export PATH="/home/{user_name}/anaconda3/bin:$PATH"
  source .bashrc
 ```
 
 ## Instalación y dependecias
-```
-git clone https://github.com/martinCastello/bioinformatica.git
-conda env create -f environment.yml
-```
+`conda env create -f environment.yml`
 
 Si el comando no trabaja, instalar las depencias manualmente:
 ```
@@ -40,6 +37,7 @@ conda install -c bioconda iqtree
 `conda env update -n bioinformatica --file environment.yml  --prune`
 
  
+ 
  **Observación:** La libreria "ete3" puede traer conflicto a la hora de utilizarse, el cual podría resolverse de las siguientes maneras:
     - Instalar/actualizar la versión de matplotlib
     - Realizar la instalación mediante la consola de Anaconda con el comando ```conda install -c etetooltikit ete3```.
@@ -55,7 +53,7 @@ Al correr el proyecto nos aparecerá una pequeña ventana en la cuál, podremos 
 
 ![bioIf3 (1)](https://user-images.githubusercontent.com/31372437/88124537-be3d0800-cba3-11ea-9319-c5dda01de6cc.jpg)
  
- En el caso de elegir el tipo incorrecto de secuencia, nos aparecerá una advertencia la cuál nos indicará el error y con podrémos decidir si deseamos continuar o no (al seleccionar el dato erroneo no perderemos funcionalidad )
+ En el caso de elegir el tipo incorrecto de secuencia, nos aparecerá una advertencia la cuál nos indicará el error y con podrémos decidir si deseamos continuar o no (al seleccionar el dato erroneo no perderemos funcionalidad con respecto al arbol pero el mapa será visualizado sin datos)
  
  El proceso puede tardar unos minutos (todo depende de la cantidad de secuencias ingresadas y del hardware de la PC), mientras se va ejecutando se podrá visualizar en la consola la ejecución.
  
@@ -69,7 +67,7 @@ Al correr el proyecto nos aparecerá una pequeña ventana en la cuál, podremos 
  Finalizado el proceso, contaremos con 3 ventanas abiertas:
     - El log del IQTree
     - El árbol filogénico
-    - El mapa con las secuencias
+    - El mapa con la ubicación de las secuencias
 
  **Observación:** Los colores de los nodos no ancestrales coinciden con los puntos en el mapa para su identificación.
   
