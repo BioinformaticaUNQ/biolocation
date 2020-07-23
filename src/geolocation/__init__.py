@@ -1,5 +1,4 @@
 import os
-import pickle
 from pathlib import Path
 from Bio import Entrez
 from Bio import SeqIO
@@ -143,7 +142,6 @@ def draw(countriesByGenbank, tree_phy):
                            markersize=str(markersize - len(colorsInMap.get((xpt, ypt)))-1 ))
         else:
             if xpt != 'NA':
-                print(xpt)
                 colorsInMap[(xpt, ypt)] = [color]
                 myMap.plot(xpt, ypt, marker='o', markerfacecolor=color, markersize=str(markersize))
         nstyle = NodeStyle()

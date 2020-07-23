@@ -17,14 +17,6 @@ def fasta_to_tree(filename, aligned, bootstrap, quantitySequences):
     if not aligned:
         out_file = nameFile + '-aligned.fasta'
         clustalo.runClustalO("grupo6@bioinformatica.com", filename, outfilename=out_file, fmt='clustal')
-    # Linux
-    # iqtree_exe = os.path.join(project_dir, 'resources/iqtree-1.6.12-Linux/bin/iqtree')
-    # Windows
-    # iqtree_exe = os.path.join(project_dir, 'resources/iqtree-1.6.12-Windows/bin/iqtree.exe')
-    if platform.system() == 'Windows':  # Windows
-        iqtree_exe = os.path.join(project_dir, 'resources/iqtree-1.6.12-Windows/bin/iqtree.exe')
-    else:  # linux variants
-        iqtree_exe = os.path.join(project_dir, 'resources/iqtree-1.6.12-Linux/bin/iqtree')
     dirName = 'IQtree_results-' + nameFile
     cwd = os.getcwd()
     try:
@@ -37,7 +29,7 @@ def fasta_to_tree(filename, aligned, bootstrap, quantitySequences):
     os.chdir(cwd + '/' + dirName)
     AlignIO.convert(out_file, "clustal", "egfr-family.phy", "phylip-relaxed")
     # IQTree need 5 sequences
-    subprocess.run([iqtree_exe, '-s', "egfr-family.phy", '-bb', str(bootstrap), '-redo'])
+    subprocess.run(['iqtree', '-s', "egfr-family.phy", '-bb', str(bootstrap), '-redo'])
     os.remove('egfr-family.phy')
     seqTree = open("egfr-family.phy.treefile", "r")
     tree_phy = Tree(str(seqTree.readlines().__getitem__(0)))
