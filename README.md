@@ -1,7 +1,7 @@
 # Biolocalización
 
 ## Introducción
-Este programa está realizado en Python. Su función es graficar árboles filogénicos mediante archivos fastas de nucleotidos o de proteínas con formato de cabecera por secuencia: '>nroGenank' (signo mayor + número Genbank). En la carpeta 'resources' hay ejemplos de archivos. Si el archivo no se encuentra alineado, se alineará y se guardará el archivo alineado para su próxima utilización. Además,se cuenta con un mapa que nos ubica las secuencias, dependiendo si poseen un país de origen.
+Este programa está realizado en Python. Su función es graficar árboles filogénicos mediante archivos fastas de nucleotidos o de proteínas con formato de cabecera por secuencia: '>nroGenbank' (signo mayor + número Genbank). En la carpeta 'resources' hay ejemplos de archivos. Si el archivo no se encuentra alineado, se alineará y se guardará el archivo alineado para su próxima utilización. Además,se cuenta con un mapa que nos ubica las secuencias, dependiendo si poseen un país de origen consultandolo con el número de Genbank a la base de datos del NCBI Entrez. 
 
 ## Requisitos previos
 ```
@@ -33,15 +33,15 @@ conda install basemap
 conda install -c bioconda iqtree
 ```
 
-## Actualizar conda env
-`conda env update -n bioinformatica --file environment.yml  --prune`
-
- 
  
  **Observación:** La libreria "ete3" puede traer conflicto a la hora de utilizarse, el cual podría resolverse de las siguientes maneras:
     - Instalar/actualizar la versión de matplotlib
     - Realizar la instalación mediante la consola de Anaconda con el comando ```conda install -c etetooltikit ete3```.
     
+
+### Actualizar conda env
+`conda env update -n bioinformatica --file environment.yml  --prune`
+
 
 ## Utilización:
 
@@ -50,6 +50,7 @@ Al correr el proyecto nos aparecerá una pequeña ventana en la cuál, podremos 
 
 ### Bash command line
 `python python_script.py`
+
 
 ![bioIf3 (1)](https://user-images.githubusercontent.com/31372437/88124537-be3d0800-cba3-11ea-9319-c5dda01de6cc.jpg)
  
