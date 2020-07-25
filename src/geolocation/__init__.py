@@ -45,15 +45,6 @@ def listIds(seq_record, db):
 
 
 def run(fileName, alphabet, bootstrap, aligned, quantitySequences):
-    '''
-    # If exists countriesByGenbank.pkl
-    countriesByGenbank_file = open("countriesByGenbank.pkl", "rb")
-    countriesByGenbank = pickle.load(countriesByGenbank_file)
-    print(countriesByGenbank)
-    draw(countriesByGenbank)
-    countriesByGenbank_file.close()
-    '''
-
     db = 'protein'  # set search to dbVar database
     if alphabet == generic_nucleotide:
         db = 'nucleotide'
@@ -130,20 +121,26 @@ def draw(countriesByGenbank, tree_phy):
         latitudes.append(latitude)
     colors = list(mcolors.TABLEAU_COLORS)
     colorsInMap = {}
-    markersize = 15
+    markersize = 20
+    nstyle = NodeStyle()
+    nstyle["fgcolor"] = 'white'
+    for t in tree_phy.traverse():
+        if not t.is_leaf():
+            t.set_style(nstyle)
     for label, xpt, ypt, color in zip(labels, iter(longitudes), iter(latitudes), colors):
         if colorsInMap.get((xpt, ypt)):
             colorsInMap.get((xpt, ypt)).append(color)
             if xpt != 'NA':
                 myMap.plot(xpt, ypt, marker='o', markerfacecolor=color,
-                           markersize=str(markersize - len(colorsInMap.get((xpt, ypt)))-1 ))
+                           markersize=str(markersize - len(colorsInMap.get((xpt, ypt))) ))
         else:
             if xpt != 'NA':
                 colorsInMap[(xpt, ypt)] = [color]
                 myMap.plot(xpt, ypt, marker='o', markerfacecolor=color, markersize=str(markersize))
         nstyle = NodeStyle()
         nstyle["fgcolor"] = color.split(':')[1]
-        tree_phy.get_leaves_by_name(label)[0].set_style(nstyle)
+        if len(tree_phy.get_children()) > 0:
+            tree_phy.get_leaves_by_name(label)[0].set_style(nstyle)
     plt.annotate('Nodos no ancestrales', xy=(0, 0), xycoords='axes fraction')
     plt.savefig('myMap.png')
     ts = TreeStyle()
@@ -152,12 +149,11 @@ def draw(countriesByGenbank, tree_phy):
     fig = plt.figure()
     img = mpimg.imread('mytree.png')
     imgplot = plt.imshow(img)
-    os.remove('egfr-family.phy.iqtree')
-    os.remove('egfr-family.phy.contree')
-    os.remove('egfr-family.phy.model.gz')
-    os.remove('egfr-family.phy.splits.nex')
-    os.remove("egfr-family.phy.bionj")
-    os.remove("egfr-family.phy.ckp.gz")
-    os.remove("egfr-family.phy.mldist")
-
-'''
+    if len(tree_phy.get_children()) > 0:
+        os.remove('egfr-family.phy.iqtree')
+        os.remove('egfr-family.phy.contree')
+        os.remove('egfr-family.phy.model.gz')
+        os.remove('egfr-family.phy.splits.nex')
+        os.remove("egfr-family.phy.bionj")
+        os.remove("egfr-family.phy.ckp.gz")
+        os.remove("egfr-family.phy.mldist")

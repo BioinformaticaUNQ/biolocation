@@ -1,9 +1,7 @@
 name: bioinformatica
 channels:
-  - bioconda
   - defaults
 dependencies:
-  - iqtree=2.0.3=h176a8bc_0
   - _libgcc_mutex=0.1=main
   - basemap=1.3.0=py37hee755e7_0
   - blas=1.0=mkl

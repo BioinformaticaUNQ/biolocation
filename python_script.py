@@ -174,22 +174,11 @@ class Root(Tk):
         self.waitingLabel = ttk.Label(self.labelFrameWaiting, text='')
         self.infoWaitingLabel = ttk.Label(self.labelFrameWaiting, text='')
         self.button.state(["disabled"])
-        msg = ''
-        if self.aligned:
-            msg = 'Secuencias alineadas, se salteara ese paso.'
-        self.infoWaitingLabel.grid(column=0, row=0)
-        self.infoWaitingLabel.config(text=msg)
         self.waitingLabel.grid(column=1, row=0)
         self.waitingLabel.config(text="Procesando...")
         self.update()
 
     def input(self):
-        # vcmd = (self.register(self.onValidate), '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
-        # self.bootstrap = IntVar(self, value="1000")
-        # self.entry = Entry(self.labelFrameBootstrap, validate="key", validatecommand=vcmd, textvariable=self.bootstrap)
-        # self.bootstrap = max(self.bootstrap.get(), 1000)
-        # self.entry.grid(column=1, row=1, padx=30, pady=10)
-        # self.entry.pack()
         self.bootstrap = IntVar(self.labelFrameBootstrap)
         self.bootstrap.set(next(iter(BOOTSTRAP_QUANTITY)))
         w = OptionMenu(self.labelFrameBootstrap, self.bootstrap, *BOOTSTRAP_QUANTITY)
