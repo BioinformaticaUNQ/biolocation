@@ -10,7 +10,7 @@ bash Anaconda-5.3.1-Linux-x86_64.sh
 Fix instalación anaconda en Linux https://www.youtube.com/watch?v=DY0DB_NwEu0:
  -gedit .bashrc
  -export PATH="/home/{user_name}/anaconda3/bin:$PATH"
- source .bashrc
+ -source .bashrc
 ```
 
 ## Instalación y dependecias
@@ -30,7 +30,6 @@ pip install geopy
 pip install matplotlib
 pip install ete3
 conda install basemap
-conda install -c bioconda iqtree
 ```
 
  
