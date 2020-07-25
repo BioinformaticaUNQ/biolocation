@@ -11,8 +11,6 @@ import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 
-# home_dir = os.path.expanduser("~")
-# my_module = os.path.join(home_dir, "Anaconda3\Library\share")
 project_dir = Path(__file__).parent.parent.parent
 my_module = os.path.join(project_dir, "resources")
 os.environ['PROJ_LIB'] = my_module
@@ -105,8 +103,7 @@ def run(fileName, alphabet, bootstrap, aligned, quantitySequences):
                 lat_lons.append('NA')
             countriesByGenbank[seq_record.id] = countries[0]
     draw(countriesByGenbank, tree_phy)
-    # draw(countriesByGenbank)
-
+    
 def draw(countriesByGenbank, tree_phy):
     geo = Nominatim(user_agent='BioLocation', timeout=2)
     plt.figure(figsize=(13, 12))
@@ -164,43 +161,3 @@ def draw(countriesByGenbank, tree_phy):
     os.remove("egfr-family.phy.mldist")
 
 '''
-def draw(countriesByGenbank): # tree_phy
-    # countriesByGenbank_file = open("countriesByGenbank.pkl", "wb")
-    # pickle.dump(countriesByGenbank, countriesByGenbank_file)
-    # countriesByGenbank_file.close()
-    geo = Nominatim(user_agent='BioLocation', timeout=2)
-    plt.figure(figsize=(13, 12))
-    myMap = Basemap(projection='robin', lon_0=0, lat_0=0)
-    labels = []
-    location = []
-    for (key, value) in countriesByGenbank.items():
-        temp_location = ('NA', 'NA')
-        if value != 'NA':
-            place = geo.geocode(value.split(':')[0])
-            x, y = myMap(place.longitude, place.latitude)
-            temp_location = (x, y)
-        labels.append(key)
-        location.append(temp_location)
-    myMap.drawcoastlines()
-    myMap.drawcountries()
-    myMap.fillcontinents(color='white')
-    myMap.drawmapboundary(fill_color='aqua')
-
-    longitudes = []
-    latitudes = []
-    for longitude, latitude in location:
-        longitudes.append(longitude)
-        latitudes.append(latitude)
-    colors = list(mcolors.TABLEAU_COLORS)
-    colorsInMap = {}
-    markersize = 15
-    for label, xpt, ypt, color in zip(labels, iter(longitudes), iter(latitudes), colors):
-        if colorsInMap.get((xpt, ypt)):
-            colorsInMap.get((xpt, ypt)).append(color)
-            if xpt != 'NA':
-                myMap.plot(xpt, ypt, marker='o', markerfacecolor=color,
-                           markersize=str(markersize )) # - len(colorsInMap.get((xpt, ypt)))-1
-        else:
-            if xpt != 'NA':
-                colorsInMap[(xpt, ypt)] = [color]
-                myMap.plot(xpt, ypt, marker='o', markerfacecolor=color, markersize=str(markersize))'''
